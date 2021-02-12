@@ -1,3 +1,5 @@
+![Logo](https://raw.githubusercontent.com/ondewo/ondewo-logos/master/github/ondewo_logo_github_2.png)
+
 # Ondewo Logging
 
 This is the logging package for ONDEWO products. It allows for easy integration with our EFK stack, and adds some useful features to the base python logging package (such as timing and exception handling), and handles GRPC error messages nicely.
