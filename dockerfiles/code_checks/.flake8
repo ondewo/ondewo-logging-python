@@ -1,0 +1,19 @@
+[flake8]
+ignore = E704, E701, E501,F401,E722,E125,E302,W293,E303,E225,F841,E126,E127,E712,W291,E129,W503,F402,E266,E741,E203,F811,W391,E265,E114,E226,E713,E402,F821,W504,W605
+exclude =
+    .git,
+    __pycache__,
+    docs/source/conf.py,
+    .nox,
+    playground,
+    ondewo-nlpaug,
+    google,
+    ondewo_cdls/services/google,
+    # generated files (protoc)
+    ondewo_apis,
+    # what used to be the ondewo-conv repository
+    ondewo-conv,
+    data,
+    cai_setup_data,
+    src,
+    conda

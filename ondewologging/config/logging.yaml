@@ -1,0 +1,118 @@
+logging:
+    version: 1
+
+    formatters:
+      brief:
+        format: '%(message)s'
+      default:
+        format: >-
+          %(asctime)s.%(msecs)03d [%(process)d|%(threadName)-8s]
+          - %(levelname)-4s
+          - %(message)s
+        datefmt: '%Y-%m-%dT%H:%M:%S'
+      debug:
+        format: >-
+          %(asctime)s.%(msecs)03d %(pathname)s:%(funcName)s():%(lineno)d
+          - [%(processName)s|%(threadName)s]
+          - %(levelname)s
+          - %(message)s
+        datefmt: '%Y-%m-%dT%H:%M:%S'
+      fluent_console:
+        '()': fluent.handler.FluentRecordFormatter
+        format:
+          time: '%(asctime)s'
+          where: '[%(module)s|%(funcName)s]'
+          message: '%(message)s'
+        datefmt: '%H:%M:%S'
+      fluent_debug:
+        '()': fluent.handler.FluentRecordFormatter
+        format:
+          level: '%(levelname)s'
+          hostname: '%(hostname)s'
+          where: '%(module)s.%(funcName)s'
+          stack_trace: '%(exc_text)s'
+          message: '%(message)s'
+          time: '%(asctime)s.%(msecs)03d'
+          process: '%(processName)s:%(process)d'
+          thread: '%(threadName)s:%(thread)d'
+        datefmt: '%Y-%m-%dT%H:%M:%S'
+
+    handlers:
+        console:
+            class: logging.StreamHandler
+            level: DEBUG
+            formatter: brief
+            stream: ext://sys.stdout
+        debug:
+            class: logging.StreamHandler
+            level: DEBUG
+            formatter: debug
+            stream: ext://sys.stdout
+        fluent-console:
+            class: fluent.handler.FluentHandler
+            host: 172.17.0.1
+            port: 24224
+            tag: py.console.logging
+            buffer_overflow_handler: overflow_handler
+            formatter: fluent_console
+            level: DEBUG
+        fluent-async-console:
+            class: fluent.asynchandler.FluentHandler
+            host: 172.17.0.1
+            port: 24224
+            tag: py.console.async.logging
+            buffer_overflow_handler: overflow_handler
+            formatter: fluent_console
+            level: DEBUG
+        fluent-debug:
+            class: fluent.handler.FluentHandler
+            host: 172.17.0.1
+            port: 24224
+            tag: py.debug.logging
+            buffer_overflow_handler: overflow_handler
+            formatter: fluent_debug
+            level: DEBUG
+        fluent-async-debug:
+            class: fluent.asynchandler.FluentHandler
+            host: 172.17.0.1
+            port: 24224
+            tag: py.debug.async.logging
+            buffer_overflow_handler: overflow_handler
+            formatter: fluent_debug
+            level: DEBUG
+        fluent-elastic:
+            class: fluent.handler.FluentHandler
+            host: 172.17.0.1
+            port: 24224
+            tag: py.elastic.logging
+            buffer_overflow_handler: overflow_handler
+            formatter: fluent_debug
+            level: DEBUG
+        fluent-async-elastic:
+            class: fluent.asynchandler.FluentHandler
+            host: 172.17.0.1
+            port: 24224
+            tag: py.elastic.async.logging
+            buffer_overflow_handler: overflow_handler
+            formatter: fluent_debug
+            level: DEBUG
+        'none':   # py2 crashes if this isnt strung
+            class: logging.NullHandler
+
+    loggers:
+        'null':
+            handlers: ['none']
+            level: DEBUG
+            propagate: False
+        console:
+            handlers: [console]
+            level: DEBUG
+            propagate: True
+        debug:
+            handlers: [debug]
+            level: DEBUG
+            propagate: True
+        '': # root logger
+            handlers: [fluent-async-console, fluent-async-debug, fluent-async-elastic]
+            level: DEBUG
+            propagate: False

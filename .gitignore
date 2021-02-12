@@ -1,0 +1,8 @@
+__pycache__
+.mypy_cache/
+fluentd/log/
+*.pyc
+*/**/*.pyc
+elastic/data/*
+ondewo_logging.egg-info/
+venv*/

@@ -1,0 +1,13 @@
+version: "3"
+services:
+
+  fluentd:
+    build: .
+    container_name: fluentd
+    volumes:
+    - ./fluentd/conf:/fluentd/etc
+    - ./fluentd/log:/fluentd/log
+    ports:
+    - "24224:24224"
+    - "24224:24224/udp"
+    restart: unless-stopped
