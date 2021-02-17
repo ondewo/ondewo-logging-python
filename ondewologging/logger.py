@@ -115,9 +115,13 @@ def import_config() -> Dict[str, Any]:
     :param:
     :return:    logging config as a dictionary
     """
-    parent: str = os.path.abspath(os.path.dirname(file_anchor.__file__))
+    if os.path.exists("./logging.yaml"):
+        config_path: str = "./logging.yaml"
+    else:
+        parent: str = os.path.abspath(os.path.dirname(file_anchor.__file__))
+        config_path = f"{parent}/config/logging.yaml"
 
-    with open(f"{parent}/config/logging.yaml") as fd:
+    with open(config_path) as fd:
         conf = yaml.safe_load(fd)
 
     return conf  # type: ignore
@@ -179,6 +183,10 @@ def initiate_loggers(conf: Dict[str, Any]) -> Tuple[logging.Logger, ...]:
             "NO MODULE NAME WAS GIVEN please give a module name for the fluent logs\n"
             "   the MODULE NAME providers information about the environment\n"
             "   such as which deployment the logs are coming from\n"
+        )
+    if not os.path.exists("./logging.yaml"):
+        logging.info(
+            "No logging.yaml in the root of the project, using the default config.\n"
         )
 
     logger_root: logging.Logger = logging.getLogger("root")

@@ -5,8 +5,8 @@ services:
     build: .
     container_name: fluentd
     volumes:
-    - ./fluentd/conf:/fluentd/etc
-    - ./fluentd/log:/fluentd/log
+    - ./conf:/fluentd/etc
+    - ./log:/fluentd/log
     ports:
     - "24224:24224"
     - "24224:24224/udp"
