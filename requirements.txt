@@ -1,4 +1,4 @@
-fluent-logger==0.9.6
+fluent-logger>=0.9.6
 msgpack
-python_dotenv==0.10.1
-PyYAML==5.3.1
+python_dotenv>=0.10.1
+PyYAML>=5.3.1
