@@ -178,6 +178,24 @@ def test_exception_handling(log_store, logger):
     error_function()
     assert not log_store.is_empty()
 
+    @exception_silencing
+    def error_function():
+        raise Exception()
+
+    log_store.reset()
+    assert log_store.is_empty()
+    error_function()
+    assert not log_store.is_empty()
+
+    @exception_handling
+    def error_function():
+        raise Exception()
+
+    log_store.reset()
+    assert log_store.is_empty()
+    error_function()
+    assert not log_store.is_empty()
+
     @Timer(suppress_exceptions=True)
     def error_function():
         short_list[big_index]
