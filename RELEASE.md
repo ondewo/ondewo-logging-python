@@ -1,6 +1,14 @@
 # Release History
 *****************
 
+## Release ONDEWO LOGGING PYTHON 1.6.1
+
+### Bug Fixes
+
+* fixed bug in exception_handling decorator
+
+
+*****************
 ## Release ONDEWO LOGGING PYTHON 1.6.0
 
 ### New Features
