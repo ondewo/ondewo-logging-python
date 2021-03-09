@@ -32,12 +32,16 @@ def import_config():  # type: ignore
     :param:
     :return:    logging config as a dictionary
     """
-    parent = os.path.abspath(os.path.dirname(file_anchor.__file__))
+    if os.path.exists("./logging.yaml"):
+        config_path = "./logging.yaml"
+    else:
+        parent = os.path.abspath(os.path.dirname(file_anchor.__file__))
+        config_path = "{}/config/logging.yaml".format(parent)
 
-    with open("{}/config/logging.yaml".format(parent)) as fd:
+    with open(config_path) as fd:
         conf = yaml.safe_load(fd)
 
-    return conf
+    return conf  # type: ignore
 
 
 def set_module_name(module_name, conf):  # type: ignore

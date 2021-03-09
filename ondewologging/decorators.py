@@ -153,8 +153,8 @@ def exception_silencing(func: Callable) -> Callable:
         try:
             return func(*args, **kwargs)
         except Exception as exc:
-            log_exception(type(exc), exc.args[0], None, func.__name__)
-            log_args_kwargs_results(func, None, *args, **kwargs)
+            log_exception(type(exc), next(iter(exc.args), None), None, func.__name__)
+            log_args_kwargs_results(func, None, -1, None, *args, **kwargs)
         return None
 
     return wrapper_error_silent
@@ -175,8 +175,8 @@ def exception_handling(func: Callable) -> Callable:
             return func(*args, **kwargs)
         except Exception as exc:
             trace = traceback.format_exc()
-            log_exception(type(exc), exc.args[0], trace, func.__name__)
-            log_args_kwargs_results(func, None, *args, **kwargs)
+            log_exception(type(exc), next(iter(exc.args), None), trace, func.__name__)
+            log_args_kwargs_results(func, None, -1, None, *args, **kwargs)
         return None
 
     return wrapper_error
@@ -194,7 +194,7 @@ def log_arguments(func: Callable) -> Callable:
     @functools.wraps(func)
     def wrapper_args(*args, **kwargs) -> Any:  # type: ignore
         result = func(*args, **kwargs)
-        log_args_kwargs_results(func, result, *args, **kwargs)
+        log_args_kwargs_results(func, result, -1, None, *args, **kwargs)
         return result
 
     return wrapper_args
