@@ -15,7 +15,13 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://bitbucket.org/ondewo/ondewo-logging",
-    packages=setuptools.find_packages(),
+    packages=[
+        np
+        for np in filter(
+            lambda n: n.startswith('ondewo.') or n == 'ondewo',
+            setuptools.find_packages()
+        )
+    ],
     package_data={"ondewologging": ["py.typed"]},
     classifiers=[
         "Programming Language :: Python :: 3",
