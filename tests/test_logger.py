@@ -18,7 +18,7 @@ from typing import Dict, Any
 
 import pytest
 
-from ondewologging.logger import logger, logger_console, logger_debug, logger_root, flatten_json, CustomLogger
+from ondewo.logging.logger import logger, logger_console, logger_debug, logger_root, flatten_json, CustomLogger
 
 
 class _Resources:

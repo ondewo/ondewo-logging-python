@@ -18,9 +18,9 @@ from typing import List, Union, Callable
 
 import pytest
 
-from ondewologging.constants import CONTEXT
-from ondewologging.decorators import Timer, exception_handling, exception_silencing, timing
-from ondewologging.logger import logger_console
+from ondewo.logging.constants import CONTEXT
+from ondewo.logging.decorators import Timer, exception_handling, exception_silencing, timing
+from ondewo.logging.logger import logger_console
 
 
 def test_timer(log_store, logger):

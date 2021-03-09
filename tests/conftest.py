@@ -16,7 +16,7 @@ import logging
 
 import pytest
 
-from ondewologging.logger import logger_console
+from ondewo.logging.logger import logger_console
 
 
 class MockLoggingHandler(logging.Handler):
