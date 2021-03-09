@@ -202,7 +202,7 @@ def log_arguments(func: Callable) -> Callable:
 
 def log_exception(
     exc_type: Any,
-    exc_val: str,
+    exc_val: Optional[str],
     traceback_str: Optional[str],
     function_name: str,
     logger: Callable[[Union[str, Dict[str, Any]]], None] = logger_console.error,
