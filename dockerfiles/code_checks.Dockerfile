@@ -1,7 +1,7 @@
 FROM dockerregistry.ondewo.com:5000/python/python:3.7-slim
 
 RUN \
-     apt-get update && apt-get install make
+     apt-get update && apt-get install make && \
      pip install flake8 mypy
 
 RUN mkdir code_to_test

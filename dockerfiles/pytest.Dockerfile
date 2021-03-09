@@ -1,6 +1,6 @@
 FROM python:3.7-slim
 
-WORKDIR /tmp/transfer
+WORKDIR /home/ondewo
 
 COPY requirements.txt .
 RUN \

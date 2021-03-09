@@ -1,5 +1,5 @@
 PACKAGE_FOLDER := ondewo-logging-python
-TESTFILE := ondewologging
+TESTFILE := ondewo
 CODE_CHECK_IMAGE := code_check_image_${TESTFILE}
 IMAGE_NAME := dockerregistry.ondewo.com:5000/ondewo-
 
