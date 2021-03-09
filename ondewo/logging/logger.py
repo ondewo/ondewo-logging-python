@@ -22,7 +22,7 @@ from typing import Any, Dict, Optional, Tuple
 import yaml
 from dotenv import load_dotenv
 
-import ondewologging.__init__ as file_anchor
+import ondewo.logging.__init__ as file_anchor
 
 load_dotenv()
 MODULE_NAME: str = os.getenv("MODULE_NAME", "")

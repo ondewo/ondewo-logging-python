@@ -20,8 +20,8 @@ from contextlib import ContextDecorator
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Optional, Union
 
-from ondewologging.constants import CONTEXT, EXCEPTION, FINISH, START
-from ondewologging.logger import logger_console
+from ondewo.logging.constants import CONTEXT, EXCEPTION, FINISH, START
+from ondewo.logging.logger import logger_console
 
 
 @dataclass
