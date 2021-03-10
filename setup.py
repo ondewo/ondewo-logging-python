@@ -7,7 +7,7 @@ with open("requirements.txt") as f:
     requires = f.read().splitlines()
 
 setuptools.setup(
-    name="ondewo-logging-python",
+    name="ondewo-logging",
     version="1.6.1",
     author="Ondewo GbmH",
     author_email="info@ondewo.com",
@@ -22,7 +22,6 @@ setuptools.setup(
             setuptools.find_packages()
         )
     ],
-    package_data={"ondewologging": ["py.typed"]},
     classifiers=[
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent",
