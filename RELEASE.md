@@ -1,6 +1,22 @@
 # Release History
 *****************
 
+## Release ONDEWO LOGGING PYTHON 2.0.0
+
+### New Features
+
+* now in the pypi!
+
+### Breaking Changes
+
+* no longer available under 'ondewologging', now 'ondewo.logging'
+
+### Migration Guide
+
+* pip install "ondewo-logging==2.0.0"
+
+
+*****************
 ## Release ONDEWO LOGGING PYTHON 1.6.1
 
 ### Bug Fixes

@@ -7,16 +7,21 @@ with open("requirements.txt") as f:
     requires = f.read().splitlines()
 
 setuptools.setup(
-    name="ondewo-logging-python",
-    version="1.6.1",
+    name="ondewo-logging",
+    version="2.0.0",
     author="Ondewo GbmH",
     author_email="info@ondewo.com",
     description="This library provides custom logging for python including error handling and timing.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://bitbucket.org/ondewo/ondewo-logging",
-    packages=setuptools.find_packages(),
-    package_data={"ondewologging": ["py.typed"]},
+    packages=[
+        np
+        for np in filter(
+            lambda n: n.startswith('ondewo.') or n == 'ondewo',
+            setuptools.find_packages()
+        )
+    ],
     classifiers=[
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent",

@@ -1,6 +1,12 @@
-![Logo](https://raw.githubusercontent.com/ondewo/ondewo-logos/master/github/ondewo_logo_github_2.png)
+<p align="center">
+    <a href="https://www.ondewo.com">
+      <img alt="ONDEWO Logo" src="https://raw.githubusercontent.com/ondewo/ondewo-logos/master/github/ondewo_logo_github_2.png"/>
+    </a>
+  <h1 align="center">
+    ONDEWO Logging
+  </h1>
+</p>
 
-# Ondewo Logging
 
 This is the logging package for ONDEWO products. It allows for easy integration with our EFK stack, and adds some useful features to the base python logging package (such as timing and exception handling), and handles GRPC error messages nicely.
 
@@ -8,19 +14,19 @@ This is the logging package for ONDEWO products. It allows for easy integration 
 
 To use this library, first pip install it:
 ```
-pip install -e ondewologging
+pip install -e ondewo-logging
 ```
 
 then import it into your project like so:
 ```
-from ondewologging.logger import logger_console
+from ondewo.logging.logger import logger_console
 ```
 
 ## Decorators
 
 A couple of decorators are included:
 ```
-from ondewologging.decorators import Timer, timing, exception_handling, exception_silencing
+from ondewo.logging.decorators import Timer, timing, exception_handling, exception_silencing
 ```
 
 The Timer class can be used as a context manager:
@@ -71,7 +77,7 @@ The tags allow for easy searching and grouping in kibana. They can be added in a
 
 ## Quickstart
 
-1) git clone ondewo-logging-python
+1) git clone https://github.com/ondewo/ondewo-logging-python
 2) make
 3) edit the fluentd config with the url and password of your elasticsearch host:
 ```
@@ -80,7 +86,7 @@ sed -i 's/<HOST>/my_elasticsearch_host/' './fluentd/conf/fluent.conf'
 ```
 4) run fluentd `docker-compose -f fluentd/docker-compose.yaml up -d`
 
-You now have a fluentd message handler running on your machine. If you use the ondewologging library, your logs will be shipped to your elasticsearch server.
+You now have a fluentd message handler running on your machine. If you use the ondewo.logging library, your logs will be shipped to your elasticsearch server.
 
 ## Fluentd Config
 

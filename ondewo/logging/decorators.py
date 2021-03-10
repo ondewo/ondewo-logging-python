@@ -1,4 +1,4 @@
-# Copyright 2020 ONDEWO GmbH
+# Copyright 2021 ONDEWO GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@ from contextlib import ContextDecorator
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Optional, Union
 
-from ondewologging.constants import CONTEXT, EXCEPTION, FINISH, START
-from ondewologging.logger import logger_console
+from ondewo.logging.constants import CONTEXT, EXCEPTION, FINISH, START
+from ondewo.logging.logger import logger_console
 
 
 @dataclass
@@ -202,7 +202,7 @@ def log_arguments(func: Callable) -> Callable:
 
 def log_exception(
     exc_type: Any,
-    exc_val: str,
+    exc_val: Optional[str],
     traceback_str: Optional[str],
     function_name: str,
     logger: Callable[[Union[str, Dict[str, Any]]], None] = logger_console.error,

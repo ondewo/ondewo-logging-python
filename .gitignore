@@ -6,3 +6,5 @@ fluentd/log/
 elastic/data/*
 ondewo_logging.egg-info/
 venv*/
+build/
+dist/
