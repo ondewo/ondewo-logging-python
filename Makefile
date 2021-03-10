@@ -17,3 +17,9 @@ run_code_checks: ## Start the code checks image and run the checks
 run_tests: ## Start a server then a little docker image to run the e2e tests in
 	docker build -t pytest_image --build-arg TESTFILE=${TESTFILE} -f dockerfiles/pytest.Dockerfile .
 	docker run --rm --network host -e RESULTS=x -e TESTFILE=${TESTFILE} pytest_image
+
+build_package:
+	python setup.py sdist bdist_wheel
+
+clear_package_data:
+	rm -rf build dist ondewo_logging.egg-info

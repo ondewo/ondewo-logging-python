@@ -77,7 +77,7 @@ The tags allow for easy searching and grouping in kibana. They can be added in a
 
 ## Quickstart
 
-1) git clone ondewo-logging-python
+1) git clone https://github.com/ondewo/ondewo-logging-python
 2) make
 3) edit the fluentd config with the url and password of your elasticsearch host:
 ```
