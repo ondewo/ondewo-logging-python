@@ -21,5 +21,8 @@ run_tests: ## Start a server then a little docker image to run the e2e tests in
 build_package:
 	python setup.py sdist bdist_wheel
 
+upload_package:
+	twine upload dist/*
+
 clear_package_data:
 	rm -rf build dist ondewo_logging.egg-info

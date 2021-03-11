@@ -14,7 +14,7 @@ setuptools.setup(
     description="This library provides custom logging for python including error handling and timing.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://bitbucket.org/ondewo/ondewo-logging",
+    url="https://github.com/ondewo/ondewo-logging-python",
     packages=[
         np
         for np in filter(

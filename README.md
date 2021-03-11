@@ -14,7 +14,7 @@ This is the logging package for ONDEWO products. It allows for easy integration 
 
 To use this library, first pip install it:
 ```
-pip install -e ondewo-logging
+pip install ondewo-logging
 ```
 
 then import it into your project like so:
