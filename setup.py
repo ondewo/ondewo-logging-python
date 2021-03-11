@@ -8,13 +8,13 @@ with open("requirements.txt") as f:
 
 setuptools.setup(
     name="ondewo-logging",
-    version="2.0.0",
-    author="Ondewo GbmH",
+    version="2.0.1",
+    author="Ondewo GmbH",
     author_email="info@ondewo.com",
     description="This library provides custom logging for python including error handling and timing.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://bitbucket.org/ondewo/ondewo-logging",
+    url="https://github.com/ondewo/ondewo-logging-python",
     packages=[
         np
         for np in filter(
