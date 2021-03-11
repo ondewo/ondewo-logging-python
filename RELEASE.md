@@ -1,6 +1,14 @@
 # Release History
 *****************
 
+## Release ONDEWO LOGGING PYTHON 2.0.1
+
+### Bug Fixes
+
+* Little spelling errors and other things in README etc.
+
+*****************
+
 ## Release ONDEWO LOGGING PYTHON 2.0.0
 
 ### New Features
