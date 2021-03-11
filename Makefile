@@ -18,11 +18,14 @@ run_tests: ## Start a server then a little docker image to run the e2e tests in
 	docker build -t pytest_image --build-arg TESTFILE=${TESTFILE} -f dockerfiles/pytest.Dockerfile .
 	docker run --rm --network host -e RESULTS=x -e TESTFILE=${TESTFILE} pytest_image
 
+push_to_pypi: build_package upload_package clear_package_data
+	echo pushed to pypi : )
+
 build_package:
 	python setup.py sdist bdist_wheel
 
 upload_package:
-	twine upload dist/*
+	twine upload -r pypi dist/*
 
 clear_package_data:
 	rm -rf build dist ondewo_logging.egg-info
