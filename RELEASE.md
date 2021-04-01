@@ -1,6 +1,13 @@
 # Release History
 *****************
 
+## Release ONDEWO LOGGING PYTHON 2.0.2
+
+### Bug Fixes
+
+* fix error logging bug related to exc.args iterable
+
+*****************
 ## Release ONDEWO LOGGING PYTHON 2.0.1
 
 ### Bug Fixes
