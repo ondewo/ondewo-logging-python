@@ -61,7 +61,7 @@ class Timer(ContextDecorator):
                 value: Any = func(*args, **kwargs)
             except Exception as exc:
                 trace = traceback.format_exc()
-                log_exception(type(exc), exc.args[0], trace, func.__name__, self.logger)  # type: ignore
+                log_exception(type(exc), next(iter(exc.args), None), trace, func.__name__, self.logger)  # type: ignore
                 if not self.suppress_exceptions:
                     self.stop(func.__name__)
                     raise
