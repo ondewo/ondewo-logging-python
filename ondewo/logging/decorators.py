@@ -18,10 +18,10 @@ import traceback
 import uuid
 from contextlib import ContextDecorator
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, Optional, Union
+from typing import Any, Callable, Dict, Optional, Union, List
 
 from ondewo.logging.constants import CONTEXT, EXCEPTION, FINISH, START
-from ondewo.logging.logger import logger_console
+from ondewo.logging.logger import logger_console, add_permanent_info, remove_permanent_info
 
 
 @dataclass
@@ -258,3 +258,28 @@ def log_args_kwargs_results(  # type: ignore
                 **formatted_results,
             }
         )
+
+
+@dataclass
+class LogPermanentInfo(ContextDecorator):
+    logger: Optional[
+        Callable[[Union[str, Dict[str, Any]]], None]
+    ]
+    config: Dict[str, Any]
+    info_to_log: Dict[str, Any]
+
+    def __call__(self, func: Callable) -> Callable:  # type: ignore
+        @functools.wraps(func)
+        def decorated(*args, **kwargs):
+            with self:
+                return func(*args, **kwargs)
+
+        return decorated
+
+    def __enter__(self) -> None:
+        add_permanent_info(self.config, self.info_to_log)
+        pass
+
+    def __exit__(self) -> None:
+        keys_to_remove: List[str] = list(self.info_to_log.keys())
+        remove_permanent_info(self.config, keys_to_remove)
