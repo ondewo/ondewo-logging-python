@@ -17,12 +17,11 @@ import logging.config
 import os
 import re
 import sys
-from typing import Any, Dict, Optional, Tuple
-
-import yaml
-from dotenv import load_dotenv
+from typing import Any, Dict, Optional, Tuple, List
 
 import ondewo.logging.__init__ as file_anchor
+import yaml
+from dotenv import load_dotenv
 
 load_dotenv()
 MODULE_NAME: str = os.getenv("MODULE_NAME", "")
@@ -197,6 +196,24 @@ def initiate_loggers(conf: Dict[str, Any]) -> Tuple[logging.Logger, ...]:
 
     return logger, logger_root, logger_debug, logger_console
 
+def reinitiate_loggers(conf: Dict[str, Any]) -> Tuple[logging.Logger, ...]:
+    """
+    Initiate the loggers with the config and return them. Will complain if the module name is not set.
+
+    :param conf:                the config of the logger
+    :return:                    the loggers
+    """
+    logging.setLoggerClass(CustomLogger)
+    logging.config.dictConfig(conf["logging"])
+
+    logger_root: logging.Logger = logging.getLogger("root")
+    logger_console: logging.Logger = logging.getLogger("console")
+    logger_debug: logging.Logger = logging.getLogger("debug")
+
+    logger: logging.Logger = logger_root
+
+    return logger, logger_root, logger_debug, logger_console
+
 
 def check_python_version(logger: logging.Logger) -> None:
     """
@@ -221,9 +238,32 @@ def create_logs(conf: Optional[Dict[str, Any]] = None) -> Tuple[logging.Logger, 
     """
     conf = conf if conf else import_config()
     conf = set_module_name(MODULE_NAME, GIT_REPO_NAME, DOCKER_IMAGE_NAME, conf)
-    logger, logger_root, logger_debug, logger_console = initiate_loggers(conf)
+    logger, logger_root, logger_debug, logger_console = reinitiate_loggers(conf)
     check_python_version(logger_console)
-    return logger, logger_root, logger_debug, logger_console
+    return logger, logger_root, logger_debug, logger_console, conf
 
 
-logger, logger_root, logger_debug, logger_console = create_logs()
+def add_permanent_info(
+    config: Dict[str, Any],
+    info_dict: Dict[str, Any],
+) -> Tuple[logging.Logger, logging.Logger, logging.Logger, logging.Logger, Dict[str, Any]]:
+    for k in info_dict.keys():
+        config["logging"]["formatters"]["fluent_console"]["format"][k] = info_dict[k]
+        config["logging"]["formatters"]["fluent_debug"]["format"][k] = info_dict[k]
+
+    logger, logger_root, logger_debug, logger_console = reinitiate_loggers(config)
+    return logger, logger_root, logger_debug, logger_console, config
+
+def remove_permanent_info(
+    config: Dict[str, Any],
+    keys_to_remove: List[str],
+) -> Tuple[logging.Logger, logging.Logger, logging.Logger, logging.Logger, Dict[str, Any]]:
+    for k in keys_to_remove:
+        config["logging"]["formatters"]["fluent_console"]["format"].pop(k)
+        config["logging"]["formatters"]["fluent_debug"]["format"].pop(k)
+
+    logger, logger_root, logger_debug, logger_console = reinitiate_loggers(config)
+    return logger, logger_root, logger_debug, logger_console, config
+
+
+logger, logger_root, logger_debug, logger_console, config = create_logs()
