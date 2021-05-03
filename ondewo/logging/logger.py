@@ -17,7 +17,7 @@ import logging.config
 import os
 import re
 import sys
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, List
 
 import yaml
 from dotenv import load_dotenv
@@ -128,7 +128,7 @@ def import_config() -> Dict[str, Any]:
 
 
 def set_module_name(
-    module_name: str, git_repo_name: str, docker_image_name: str, conf: Dict[str, Any]
+        module_name: str, git_repo_name: str, docker_image_name: str, conf: Dict[str, Any]
 ) -> Dict[str, Any]:
     """
     Sets the module name as given in the env on deployment.
@@ -157,6 +157,21 @@ def set_module_name(
     return conf
 
 
+def _set_custom_logger(conf: Dict[str, Any]) -> None:
+    logging.setLoggerClass(CustomLogger)
+    logging.config.dictConfig(conf["logging"])
+
+
+def _get_logger_instances() -> Tuple[logging.Logger, ...]:
+    logger_root: logging.Logger = logging.getLogger("root")
+    logger_console: logging.Logger = logging.getLogger("console")
+    logger_debug: logging.Logger = logging.getLogger("debug")
+
+    logger: logging.Logger = logger_root
+
+    return logger, logger_root, logger_debug, logger_console
+
+
 def initiate_loggers(conf: Dict[str, Any]) -> Tuple[logging.Logger, ...]:
     """
     Initiate the loggers with the config and return them. Will complain if the module name is not set.
@@ -164,8 +179,7 @@ def initiate_loggers(conf: Dict[str, Any]) -> Tuple[logging.Logger, ...]:
     :param conf:                the config of the logger
     :return:                    the loggers
     """
-    logging.setLoggerClass(CustomLogger)
-    logging.config.dictConfig(conf["logging"])
+    _set_custom_logger(conf)
 
     if not GIT_REPO_NAME:
         logging.warning(
@@ -189,11 +203,7 @@ def initiate_loggers(conf: Dict[str, Any]) -> Tuple[logging.Logger, ...]:
             "No logging.yaml in the root of the project, using the default config.\n"
         )
 
-    logger_root: logging.Logger = logging.getLogger("root")
-    logger_console: logging.Logger = logging.getLogger("console")
-    logger_debug: logging.Logger = logging.getLogger("debug")
-
-    logger: logging.Logger = logger_root
+    logger, logger_root, logger_debug, logger_console = _get_logger_instances()
 
     return logger, logger_root, logger_debug, logger_console
 
@@ -212,7 +222,9 @@ def check_python_version(logger: logging.Logger) -> None:
         )
 
 
-def create_logs(conf: Optional[Dict[str, Any]] = None) -> Tuple[logging.Logger, ...]:
+def create_logs(
+        conf: Optional[Dict[str, Any]] = None
+) -> Tuple[logging.Logger, logging.Logger, logging.Logger, logging.Logger, Dict[str, Any]]:
     """
     Loads, configures and returns logs.
 
@@ -223,7 +235,29 @@ def create_logs(conf: Optional[Dict[str, Any]] = None) -> Tuple[logging.Logger, 
     conf = set_module_name(MODULE_NAME, GIT_REPO_NAME, DOCKER_IMAGE_NAME, conf)
     logger, logger_root, logger_debug, logger_console = initiate_loggers(conf)
     check_python_version(logger_console)
-    return logger, logger_root, logger_debug, logger_console
+    return logger, logger_root, logger_debug, logger_console, conf
 
 
-logger, logger_root, logger_debug, logger_console = create_logs()
+def add_permanent_info(
+        config: Dict[str, Any],
+        info_dict: Dict[str, Any],
+) -> None:
+    for k in info_dict.keys():
+        config["logging"]["formatters"]["fluent_console"]["format"][k] = info_dict[k]
+        config["logging"]["formatters"]["fluent_debug"]["format"][k] = info_dict[k]
+
+    _set_custom_logger(config)
+
+
+def remove_permanent_info(
+        config: Dict[str, Any],
+        keys_to_remove: List[str],
+) -> None:
+    for k in keys_to_remove:
+        config["logging"]["formatters"]["fluent_console"]["format"].pop(k)
+        config["logging"]["formatters"]["fluent_debug"]["format"].pop(k)
+
+    _set_custom_logger(config)
+
+
+logger, logger_root, logger_debug, logger_console, config = create_logs()
