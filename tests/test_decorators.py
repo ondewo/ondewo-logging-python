@@ -11,16 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import json
 import re
+from logging import Logger
+from multiprocessing.pool import ThreadPool
 from time import sleep
-from typing import List, Union, Callable
+from typing import List, Union, Callable, Dict, Any
 
 import pytest
 
 from ondewo.logging.constants import CONTEXT
 from ondewo.logging.decorators import Timer, exception_handling, exception_silencing, timing
 from ondewo.logging.logger import logger_console
+from tests.conftest import MockLoggingHandler
 
 
 def test_timer(log_store, logger):
@@ -379,6 +382,63 @@ def test_nested_functions(
 
     all_messages = " ".join(log_store.messages["warning"])
     assert all_messages.count('Elapsed time') == 2
+
+
+def test_function_repeated(log_store: MockLoggingHandler, logger: Logger) -> None:
+    logger.addHandler(log_store)
+
+    @Timer()
+    def function():
+        sleep(0.01)
+
+    for _ in range(10):
+        function()
+
+    durations: List[float] = []
+    for message in log_store.messages['warning']:
+        message_dict: Dict[str, Any] = eval(message)
+        if 'duration' in message_dict:
+            durations.append(message_dict['duration'])
+    assert all(0.011 == pytest.approx(duration, abs=0.001) for duration in durations)
+
+
+def test_function_concurrent(log_store: MockLoggingHandler, logger: Logger) -> None:
+    logger.addHandler(log_store)
+
+    @Timer()
+    def function(n: int):
+        sleep(0.01)
+
+    n_threads: int = 10
+    with ThreadPool(processes=n_threads) as pool:
+        pool.map(function, range(n_threads))
+
+    durations: List[float] = []
+    for message in log_store.messages['warning']:
+        message_dict: Dict[str, Any] = eval(message)
+        if 'duration' in message_dict:
+            durations.append(message_dict['duration'])
+    assert all(0.011 == pytest.approx(duration, abs=0.005) for duration in durations)
+
+
+@pytest.mark.skip(reason="Fix timer to create a new instance of timer each time a function is called.")
+def test_function_no_args_concurrent(log_store: MockLoggingHandler, logger: Logger) -> None:
+    logger.addHandler(log_store)
+
+    @Timer()
+    def function():
+        sleep(0.01)
+
+    n_threads: int = 10
+    with ThreadPool(processes=n_threads) as pool:
+        pool.starmap(function, [[] for _ in range(n_threads)])
+
+    durations: List[float] = []
+    for message in log_store.messages['warning']:
+        message_dict: Dict[str, Any] = eval(message)
+        if 'duration' in message_dict:
+            durations.append(message_dict['duration'])
+    assert all(0.011 == pytest.approx(duration, abs=0.005) for duration in durations)
 
 
 def test_timer_as_context_manager(

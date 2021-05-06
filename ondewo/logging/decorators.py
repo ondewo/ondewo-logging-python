@@ -96,11 +96,13 @@ class Timer(ContextDecorator):
                 return 0.0
 
         # Calculate elapsed time
-        assert key in self._start_times
-        elapsed_time = time.perf_counter() - self._start_times[key]
+        if key in self._start_times:
+            elapsed_time = time.perf_counter() - self._start_times[key]
 
-        # reset the start time
-        del self._start_times[key]
+            # reset the start time
+            del self._start_times[key]
+        else:
+            elapsed_time = 0.0
 
         # Report elapsed time
         if self.logger:
