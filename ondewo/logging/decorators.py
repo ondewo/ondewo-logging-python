@@ -16,9 +16,10 @@ import functools
 import time
 import traceback
 import uuid
+from collections import defaultdict, Hashable
 from contextlib import ContextDecorator
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, Optional, Union
+from typing import Any, Callable, Dict, Optional, Union, ClassVar
 
 from ondewo.logging.constants import CONTEXT, EXCEPTION, FINISH, START
 from ondewo.logging.logger import logger_console
@@ -27,44 +28,40 @@ from ondewo.logging.logger import logger_console
 @dataclass
 class Timer(ContextDecorator):
     """Time your code using a class, context manager, or decorator"""
-
-    name: Optional[str] = None
+    CM_TIMER_KEY: ClassVar[tuple] = ('CM_TIMER',)
+    name: str = field(default_factory=uuid.uuid4)
     message: str = FINISH
-    logger: Optional[
-        Callable[[Union[str, Dict[str, Any]]], None]
-    ] = logger_console.warning
-    _start_time: Optional[float] = field(default=None, init=False, repr=False)
+    logger: Callable[[Union[str, Dict[str, Any]]], None] = logger_console.warning
+    _start_times: Dict[tuple, float] = field(default_factory=dict, init=False, repr=False)
     log_arguments: bool = True
     suppress_exceptions: bool = False
     recursive: bool = False
-    recurse_depth: int = 0
+    recurse_depths: Dict[tuple, int] = field(default_factory=lambda: defaultdict(float))
     argument_max_length: int = 10000
 
-    def __post_init__(self) -> None:
-        """Initialization: add timer to dicCallable[[Union[str, Dict[str, Any]]], None]t of timers"""
-        if not self.name:
-            self.name = str(uuid.uuid4())
+    def __call__(self, func: Callable) -> Callable:
+        """ Decorator which adds a logs timing information for the decorated function.
 
-    def __call__(self, func: Callable) -> Callable:  # type: ignore
-        """
-        Decorator which adds a logs timing information for the decorated function.
+        Args
+            func: the function to be decorated
 
-        :param func:    the function to be decorated
-        :return:        the decorator
+        Returns:
+            the decorator
         """
 
         @functools.wraps(func)
-        def wrapper_timing(*args, **kwargs) -> Any:  # type: ignore
-            self.start(func)
+        def wrapper_timing(*args, **kwargs) -> Any:
+            key: tuple = self._hash_func_args(*args, **kwargs)
+
+            self.start(func=func, key=key)
 
             try:
-                with self:
-                    value: Any = func(*args, **kwargs)
+                value: Any = func(*args, **kwargs)
             except Exception as exc:
                 trace = traceback.format_exc()
                 log_exception(type(exc), next(iter(exc.args), None), trace, func.__name__, self.logger)  # type: ignore
                 if not self.suppress_exceptions:
-                    self.stop(func.__name__)
+                    self.stop(func_name=func.__name__, key=key)
                     raise
                 value = "An exception occurred!"
 
@@ -73,33 +70,36 @@ class Timer(ContextDecorator):
                     func, value, self.argument_max_length, self.logger, *args, **kwargs
                 )
 
-            self.stop(func.__name__)
+            self.stop(func_name=func.__name__, key=key)
             return value
 
         return wrapper_timing
 
-    def start(self, func: Optional[Callable] = None) -> None:
+    def start(self, func: Optional[Callable] = None, key: tuple = CM_TIMER_KEY) -> None:
         """Start a new timer"""
         if func:
-            self.logger({"message": START.format(func.__name__)})  # type: ignore
-        if self._start_time is not None:
+            self.logger({"message": START.format(func.__name__, key)})
+        if key in self._start_times:
             if self.recursive:
-                self.recurse_depth += 1
-                self.logger(f"Recursing, depth = {self.recurse_depth}")  # type: ignore
+                self.recurse_depths[key] += 1
+                self.logger(f"Recursing, depth = {self.recurse_depths[key]}")
                 return
         else:
-            self._start_time = time.perf_counter()
+            self._start_times[key] = time.perf_counter()
 
-    def stop(self, func_name: Optional[str] = None) -> float:
+    def stop(self, func_name: Optional[str] = None, key: tuple = CM_TIMER_KEY) -> float:
         """Stop the timer, and report the elapsed time"""
-        if self.recurse_depth:
-            self.recurse_depth -= 1
+        if self.recurse_depths[key]:
+            self.recurse_depth[key] -= 1
             if self.recursive:
                 return 0.0
 
         # Calculate elapsed time
-        assert self._start_time
-        elapsed_time = time.perf_counter() - self._start_time
+        assert key in self._start_times
+        elapsed_time = time.perf_counter() - self._start_times[key]
+
+        # reset the start time
+        del self._start_times[key]
 
         # Report elapsed time
         if self.logger:
@@ -135,6 +135,17 @@ class Timer(ContextDecorator):
                 exc_type, exc_val, traceback.format_exc(), CONTEXT, self.logger  # type: ignore
             )
         return self.suppress_exceptions
+
+    def _hash_func_args(self, *args, **kwargs) -> tuple:
+        hashable_args: list = []
+        for arg in args:
+            if isinstance(arg, Hashable):
+                hashable_args.append(arg)
+        hashable_args.append(object())
+        for key, kwarg in sorted(kwargs.items()):
+            if isinstance(kwarg, Hashable):
+                hashable_args.append((key, kwarg))
+        return tuple(hashable_args)
 
 
 timing = Timer()
