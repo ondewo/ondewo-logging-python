@@ -19,7 +19,8 @@ import uuid
 from collections import defaultdict, Hashable
 from contextlib import ContextDecorator
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, Optional, Union, ClassVar
+from itertools import chain
+from typing import Any, Callable, Dict, Optional, Union, ClassVar, Tuple
 
 from ondewo.logging.constants import CONTEXT, EXCEPTION, FINISH, START
 from ondewo.logging.logger import logger_console
@@ -28,7 +29,7 @@ from ondewo.logging.logger import logger_console
 @dataclass
 class Timer(ContextDecorator):
     """Time your code using a class, context manager, or decorator"""
-    CM_TIMER_KEY: ClassVar[tuple] = ('CM_TIMER',)
+    DEFAULT_KEY: ClassVar[tuple] = ('<DEFAULT>',)
     name: str = field(default_factory=uuid.uuid4)
     message: str = FINISH
     logger: Callable[[Union[str, Dict[str, Any]]], None] = logger_console.warning
@@ -51,7 +52,7 @@ class Timer(ContextDecorator):
 
         @functools.wraps(func)
         def wrapper_timing(*args, **kwargs) -> Any:
-            key: tuple = self._hash_func_args(*args, **kwargs)
+            key: tuple = self._get_func_key(*args, **kwargs)
 
             self.start(func=func, key=key)
 
@@ -75,7 +76,7 @@ class Timer(ContextDecorator):
 
         return wrapper_timing
 
-    def start(self, func: Optional[Callable] = None, key: tuple = CM_TIMER_KEY) -> None:
+    def start(self, func: Optional[Callable] = None, key: tuple = DEFAULT_KEY) -> None:
         """Start a new timer"""
         if func:
             self.logger({"message": START.format(func.__name__, key)})
@@ -87,10 +88,10 @@ class Timer(ContextDecorator):
         else:
             self._start_times[key] = time.perf_counter()
 
-    def stop(self, func_name: Optional[str] = None, key: tuple = CM_TIMER_KEY) -> float:
+    def stop(self, func_name: Optional[str] = None, key: tuple = DEFAULT_KEY) -> float:
         """Stop the timer, and report the elapsed time"""
         if self.recurse_depths[key]:
-            self.recurse_depth[key] -= 1
+            self.recurse_depths[key] -= 1
             if self.recursive:
                 return 0.0
 
@@ -136,16 +137,26 @@ class Timer(ContextDecorator):
             )
         return self.suppress_exceptions
 
-    def _hash_func_args(self, *args, **kwargs) -> tuple:
-        hashable_args: list = []
-        for arg in args:
-            if isinstance(arg, Hashable):
-                hashable_args.append(arg)
-        hashable_args.append(object())
-        for key, kwarg in sorted(kwargs.items()):
-            if isinstance(kwarg, Hashable):
-                hashable_args.append((key, kwarg))
-        return tuple(hashable_args)
+    def _get_func_key(self, *args: Any, **kwargs: Any) -> Tuple[Hashable, ...]:
+        """ Create a tuple of hashable args and kwargs that identifies a function call.
+
+        NOTE: if Timer is in recursive mode, use default key to accumulate the duration of recursive function
+            calls
+
+        Args:
+            *args:
+            **kwargs:
+
+        Returns:
+            tuple of hashable args and kwargs
+        """
+        if self.recursive:
+            return Timer.DEFAULT_KEY
+
+        return tuple(
+            (key, arg) for key, arg in chain(enumerate(args), sorted(kwargs.items()))
+            if isinstance(arg, Hashable)
+        )
 
 
 timing = Timer()
