@@ -262,6 +262,11 @@ def log_args_kwargs_results(  # type: ignore
 
 @dataclass
 class LogPermanentInfo(ContextDecorator):
+    """
+    This class reinitializes the received logger object within the scope, so that the new instance
+    is going to contain the attached info (dictionary).
+    Can be used as a Context Manager or a Decorator.
+    """
     logger: Optional[
         Callable[[Union[str, Dict[str, Any]]], None]
     ]
