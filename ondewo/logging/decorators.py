@@ -278,8 +278,7 @@ class LogPermanentInfo(ContextDecorator):
 
     def __enter__(self) -> None:
         add_permanent_info(self.config, self.info_to_log)
-        pass
 
-    def __exit__(self) -> None:
+    def __exit__(self, exc_type: Any, exc_val: str, traceback_obj: Any) -> None:
         keys_to_remove: List[str] = list(self.info_to_log.keys())
         remove_permanent_info(self.config, keys_to_remove)
