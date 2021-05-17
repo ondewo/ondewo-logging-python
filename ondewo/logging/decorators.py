@@ -54,7 +54,7 @@ class Timer(ContextDecorator):
 
         @functools.wraps(func)
         def wrapper_timing(*args, **kwargs) -> Any:
-            self.start(func=func)
+            self.start(func)
 
             try:
                 value: Any = func(*args, **kwargs)
@@ -62,7 +62,7 @@ class Timer(ContextDecorator):
                 trace = traceback.format_exc()
                 log_exception(type(exc), next(iter(exc.args), None), trace, func.__name__, self.logger)  # type: ignore
                 if not self.suppress_exceptions:
-                    self.stop(func_name=func.__name__)
+                    self.stop(func.__name__)
                     raise
                 value = "An exception occurred!"
 
@@ -71,7 +71,7 @@ class Timer(ContextDecorator):
                     func, value, self.argument_max_length, self.logger, *args, **kwargs
                 )
 
-            self.stop(func_name=func.__name__)
+            self.stop(func.__name__)
             return value
 
         return wrapper_timing  # type: ignore
