@@ -11,17 +11,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import json
 import re
 from logging import Logger
 from multiprocessing.pool import ThreadPool
 from time import sleep
-from typing import List, Union, Callable, Dict, Any
+from typing import Any, Callable, Dict, List, Union
 
 import pytest
 
 from ondewo.logging.constants import CONTEXT
-from ondewo.logging.decorators import Timer, exception_handling, exception_silencing, timing
+from ondewo.logging.decorators import (
+    Timer,
+    exception_handling,
+    exception_silencing,
+    timing,
+)
 from ondewo.logging.logger import logger_console
 from tests.conftest import MockLoggingHandler
 
@@ -277,46 +281,52 @@ def concat_two_strings_length_minus_one(a: str, b: str) -> str:
 
 
 @pytest.mark.parametrize(
-    "function, param_a, param_b, assert_args, assert_kwargs", [
+    "function, param_a, param_b, assert_args, assert_kwargs",
+    [
         (
-                concat_two_strings,
-                "dog",
-                "cat",
-                ["'dog'", "'cat'", "'result': 'dogcat'"],
-                ["'a': 'dog'", "'b': 'cat'", "'result': 'dogcat'"]
+            concat_two_strings,
+            "dog",
+            "cat",
+            ["'dog'", "'cat'", "'result': 'dogcat'"],
+            ["'a': 'dog'", "'b': 'cat'", "'result': 'dogcat'"],
         ),
         (
-                add_two_integers,
-                1,
-                2,
-                ["'1'", "'2'", "'result': '3'"],
-                ["'a': '1'", "'b': '2'", "'result': '3'"]
+            add_two_integers,
+            1,
+            2,
+            ["'1'", "'2'", "'result': '3'"],
+            ["'a': '1'", "'b': '2'", "'result': '3'"],
         ),
         (
-                concat_two_strings_long,
-                "a",
-                "long",
-                ["'a'", "'lon<TRUNCATED!>'", "'result': 'alo<TRUNCATED!>'"],
-                ["'a': 'a'", "'b': 'lon<TRUNCATED!>'", "'result': 'alo<TRUNCATED!>'"]
+            concat_two_strings_long,
+            "a",
+            "long",
+            ["'a'", "'lon<TRUNCATED!>'", "'result': 'alo<TRUNCATED!>'"],
+            ["'a': 'a'", "'b': 'lon<TRUNCATED!>'", "'result': 'alo<TRUNCATED!>'"],
         ),
         (
-                concat_two_strings_length_minus_one,
-                "doglong",
-                "catlong",
-                ["'doglong'", "'catlong'", "'result': 'doglongcatlong'"],
-                ["'a': 'doglong'", "'b': 'catlong'", "'result': 'doglongcatlong'"]
+            concat_two_strings_length_minus_one,
+            "doglong",
+            "catlong",
+            ["'doglong'", "'catlong'", "'result': 'doglongcatlong'"],
+            ["'a': 'doglong'", "'b': 'catlong'", "'result': 'doglongcatlong'"],
         ),
     ],
-    ids=["Param is a string", "Param is not a string", "String is too long", "Max length is -1"],
+    ids=[
+        "Param is a string",
+        "Param is not a string",
+        "String is too long",
+        "Max length is -1",
+    ],
 )
 def test_length_filter(
-        log_store,
-        logger,
-        function: Callable,
-        param_a: Union[str, int],
-        param_b: Union[str, int],
-        assert_args: List[str],
-        assert_kwargs: List[str]
+    log_store: MockLoggingHandler,
+    logger: Logger,
+    function: Callable,
+    param_a: Union[str, int],
+    param_b: Union[str, int],
+    assert_args: List[str],
+    assert_kwargs: List[str],
 ) -> None:
     logger.addHandler(log_store)
 
@@ -339,10 +349,7 @@ def concat_two_strings_warning(a: str, b: str) -> str:
     return a + b
 
 
-def test_length_filter_logger_default_warning(
-        log_store,
-        logger
-) -> None:
+def test_length_filter_logger_default_warning(log_store, logger) -> None:
     logger.addHandler(log_store)
     param_a: str = "dog"
     param_b: str = "cat"
@@ -363,10 +370,7 @@ def test_length_filter_logger_default_warning(
     log_store.reset()
 
 
-def test_nested_functions(
-        log_store,
-        logger
-) -> None:
+def test_nested_functions(log_store, logger) -> None:
     logger.addHandler(log_store)
 
     @Timer()
@@ -381,7 +385,7 @@ def test_nested_functions(
     function_b()
 
     all_messages = " ".join(log_store.messages["warning"])
-    assert all_messages.count('Elapsed time') == 2
+    assert all_messages.count("Elapsed time") == 2
 
 
 def test_function_repeated(log_store: MockLoggingHandler, logger: Logger) -> None:
@@ -395,34 +399,14 @@ def test_function_repeated(log_store: MockLoggingHandler, logger: Logger) -> Non
         function()
 
     durations: List[float] = []
-    for message in log_store.messages['warning']:
+    for message in log_store.messages["warning"]:
         message_dict: Dict[str, Any] = eval(message)
-        if 'duration' in message_dict:
-            durations.append(message_dict['duration'])
+        if "duration" in message_dict:
+            durations.append(message_dict["duration"])
     assert all(0.011 == pytest.approx(duration, abs=0.001) for duration in durations)
 
 
 def test_function_concurrent(log_store: MockLoggingHandler, logger: Logger) -> None:
-    logger.addHandler(log_store)
-
-    @Timer()
-    def function(n: int):
-        sleep(0.01)
-
-    n_threads: int = 10
-    with ThreadPool(processes=n_threads) as pool:
-        pool.map(function, range(n_threads))
-
-    durations: List[float] = []
-    for message in log_store.messages['warning']:
-        message_dict: Dict[str, Any] = eval(message)
-        if 'duration' in message_dict:
-            durations.append(message_dict['duration'])
-    assert all(0.011 == pytest.approx(duration, abs=0.005) for duration in durations)
-
-
-@pytest.mark.skip(reason="Fix timer to create a new instance of timer each time a function is called.")
-def test_function_no_args_concurrent(log_store: MockLoggingHandler, logger: Logger) -> None:
     logger.addHandler(log_store)
 
     @Timer()
@@ -434,26 +418,23 @@ def test_function_no_args_concurrent(log_store: MockLoggingHandler, logger: Logg
         pool.starmap(function, [[] for _ in range(n_threads)])
 
     durations: List[float] = []
-    for message in log_store.messages['warning']:
+    for message in log_store.messages["warning"]:
         message_dict: Dict[str, Any] = eval(message)
-        if 'duration' in message_dict:
-            durations.append(message_dict['duration'])
+        if "duration" in message_dict:
+            durations.append(message_dict["duration"])
     assert all(0.011 == pytest.approx(duration, abs=0.005) for duration in durations)
 
 
-def test_timer_as_context_manager(
-        log_store,
-        logger
-) -> None:
+def test_timer_as_context_manager(log_store, logger) -> None:
     logger.addHandler(log_store)
-    with Timer(logger=logger_console.warning) as time:
-        concat_two_strings_warning('a', 'b')
+    with Timer(logger=logger_console.warning):
+        concat_two_strings_warning("a", "b")
     all_messages = " ".join(log_store.messages["warning"])
-    assert 'exception' not in all_messages
+    assert "exception" not in all_messages
     log_store.reset()
 
-    with Timer(logger=logger_console.warning, suppress_exceptions=True) as time:
+    with Timer(logger=logger_console.warning, suppress_exceptions=True):
         raise Exception
     all_messages = " ".join(log_store.messages["warning"])
-    assert 'exception' in all_messages
+    assert "exception" in all_messages
     log_store.reset()

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+from typing import Iterator
 
 import pytest
 
@@ -50,14 +51,14 @@ class MockLoggingHandler(logging.Handler):
 
 
 @pytest.fixture(scope="function")
-def log_store():
+def log_store() -> Iterator[MockLoggingHandler]:
     m = MockLoggingHandler()
     # logger.addHandler(m)  # TODO: find out why this doesnt work
     yield m
 
 
 @pytest.fixture(scope="function")
-def logger():
+def logger() -> Iterator[logging.Logger]:
     logger = logger_console
     while len(logger.handlers) > 1:
         logger.handlers.pop()

@@ -16,34 +16,34 @@ import functools
 import time
 import traceback
 import uuid
-from collections import defaultdict, Hashable
+from collections import defaultdict
 from contextlib import ContextDecorator
 from dataclasses import dataclass, field
-from google.protobuf.message import Message
-from google.protobuf.text_format import MessageToString
-from itertools import chain
-from typing import Any, Callable, Dict, Optional, Union, ClassVar, Tuple
+from threading import get_ident
+from typing import Any, Callable, Dict, Optional, TypeVar, Union
 
 from ondewo.logging.constants import CONTEXT, EXCEPTION, FINISH, START
 from ondewo.logging.logger import logger_console
+
+TF = TypeVar("TF", bound=Callable[..., Any])
 
 
 @dataclass
 class Timer(ContextDecorator):
     """Time your code using a class, context manager, or decorator"""
-    DEFAULT_KEY: ClassVar[tuple] = ('<DEFAULT>',)
-    name: str = field(default_factory=uuid.uuid4)
+
+    name: str = field(default_factory=lambda: str(uuid.uuid4()))
     message: str = FINISH
-    logger: Callable[[Union[str, Dict[str, Any]]], None] = logger_console.warning
-    _start_times: Dict[tuple, float] = field(default_factory=dict, init=False, repr=False)
+    logger: Callable[..., None] = logger_console.warning
+    _start_times: Dict[int, float] = field(default_factory=dict, init=False, repr=False)
     log_arguments: bool = True
     suppress_exceptions: bool = False
     recursive: bool = False
-    recurse_depths: Dict[tuple, int] = field(default_factory=lambda: defaultdict(float))
+    recurse_depths: Dict[int, float] = field(default_factory=lambda: defaultdict(float))
     argument_max_length: int = 10000
 
-    def __call__(self, func: Callable) -> Callable:
-        """ Decorator which adds a logs timing information for the decorated function.
+    def __call__(self, func: TF) -> TF:
+        """Decorator which adds a logs timing information for the decorated function.
 
         Args
             func: the function to be decorated
@@ -54,9 +54,7 @@ class Timer(ContextDecorator):
 
         @functools.wraps(func)
         def wrapper_timing(*args, **kwargs) -> Any:
-            key: tuple = self._get_func_key(*args, **kwargs)
-
-            self.start(func=func, key=key)
+            self.start(func=func)
 
             try:
                 value: Any = func(*args, **kwargs)
@@ -64,7 +62,7 @@ class Timer(ContextDecorator):
                 trace = traceback.format_exc()
                 log_exception(type(exc), next(iter(exc.args), None), trace, func.__name__, self.logger)  # type: ignore
                 if not self.suppress_exceptions:
-                    self.stop(func_name=func.__name__, key=key)
+                    self.stop(func_name=func.__name__)
                     raise
                 value = "An exception occurred!"
 
@@ -73,50 +71,60 @@ class Timer(ContextDecorator):
                     func, value, self.argument_max_length, self.logger, *args, **kwargs
                 )
 
-            self.stop(func_name=func.__name__, key=key)
+            self.stop(func_name=func.__name__)
             return value
 
-        return wrapper_timing
+        return wrapper_timing  # type: ignore
 
-    def start(self, func: Optional[Callable] = None, key: tuple = DEFAULT_KEY) -> None:
+    def start(self, func: Optional[TF] = None) -> None:
         """Start a new timer"""
+        thread_id: int = get_ident()
         if func:
-            self.logger({"message": START.format(func.__name__, key)})
-        if key in self._start_times:
+            self.logger({"message": START.format(func.__name__, thread_id)})
+        if thread_id in self._start_times:
             if self.recursive:
-                self.recurse_depths[key] += 1
-                self.logger(f"Recursing, depth = {self.recurse_depths[key]}")
+                self.recurse_depths[thread_id] += 1
+                self.logger(f"Recursing, depth = {self.recurse_depths[thread_id]}")
                 return
         else:
-            self._start_times[key] = time.perf_counter()
+            self._start_times[thread_id] = time.perf_counter()
 
-    def stop(self, func_name: Optional[str] = None, key: tuple = DEFAULT_KEY) -> float:
+    def stop(self, func_name: Optional[str] = None) -> float:
         """Stop the timer, and report the elapsed time"""
-        if self.recurse_depths[key]:
-            self.recurse_depths[key] -= 1
+        thread_id: int = get_ident()
+
+        if self.recurse_depths[thread_id]:
+            self.recurse_depths[thread_id] -= 1
             if self.recursive:
                 return 0.0
 
         # Calculate elapsed time
-        if key in self._start_times:
-            elapsed_time = time.perf_counter() - self._start_times[key]
+        if thread_id in self._start_times:
+            elapsed_time = time.perf_counter() - self._start_times[thread_id]
 
             # reset the start time
-            del self._start_times[key]
+            del self._start_times[thread_id]
         else:
             elapsed_time = 0.0
 
         # Report elapsed time
         if self.logger:
-            self.report(elapsed_time, func_name)
+            self.report(
+                elapsed_time=elapsed_time, func_name=func_name, thread_id=thread_id
+            )
 
         return elapsed_time
 
-    def report(self, elapsed_time: float, func_name: Optional[str]) -> None:
-        name = func_name if func_name else CONTEXT
+    def report(
+        self,
+        elapsed_time: float,
+        func_name: Optional[str] = None,
+        thread_id: Optional[int] = None,
+    ) -> None:
+        name: str = func_name or CONTEXT
 
         try:
-            message = self.message.format(elapsed_time, name)
+            message = self.message.format(elapsed_time, name, thread_id)
         except IndexError:
             pass
 
@@ -140,33 +148,6 @@ class Timer(ContextDecorator):
                 exc_type, exc_val, traceback.format_exc(), CONTEXT, self.logger  # type: ignore
             )
         return self.suppress_exceptions
-
-    def _get_func_key(self, *args: Any, **kwargs: Any) -> Tuple[Tuple[Hashable, Hashable], ...]:
-        """ Create a tuple of hashable args and kwargs that identifies a function call.
-
-        NOTE: if Timer is in recursive mode, use default key to accumulate the duration of recursive function
-            calls
-
-        Args:
-            *args:
-            **kwargs:
-
-        Returns:
-            tuple of hashable args and kwargs
-        """
-        if self.recursive:
-            return Timer.DEFAULT_KEY
-
-        arg_tuples: List[Tuple[Hashable, Hashable], ...] = []
-        for key, arg in chain(enumerate(args), sorted(kwargs.items())):
-            if not isinstance(arg, Hashable):
-                # skip the argument if it is not hashable
-                continue
-            if isinstance(arg, Message):
-                # convert protobuf message to string (raises an error when calling hash())
-                arg = MessageToString(arg)
-            arg_tuples.append((key, arg))
-        return tuple(arg_tuples)
 
 
 timing = Timer()
@@ -255,12 +236,10 @@ def log_exception(
 
 
 def log_args_kwargs_results(  # type: ignore
-    func: Callable,
+    func: TF,
     result: Any,
     argument_max_length: int = -1,
-    logger: Optional[
-        Callable[[Union[str, Dict[str, Any]]], None]
-    ] = logger_console.warning,
+    logger: Optional[Callable[..., None]] = logger_console.warning,
     *args,
     **kwargs,
 ) -> None:
