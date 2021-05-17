@@ -19,6 +19,8 @@ import uuid
 from collections import defaultdict, Hashable
 from contextlib import ContextDecorator
 from dataclasses import dataclass, field
+from google.protobuf.message import Message
+from google.protobuf.text_format import MessageToString
 from itertools import chain
 from typing import Any, Callable, Dict, Optional, Union, ClassVar, Tuple
 
@@ -139,7 +141,7 @@ class Timer(ContextDecorator):
             )
         return self.suppress_exceptions
 
-    def _get_func_key(self, *args: Any, **kwargs: Any) -> Tuple[Hashable, ...]:
+    def _get_func_key(self, *args: Any, **kwargs: Any) -> Tuple[Tuple[Hashable, Hashable], ...]:
         """ Create a tuple of hashable args and kwargs that identifies a function call.
 
         NOTE: if Timer is in recursive mode, use default key to accumulate the duration of recursive function
@@ -155,10 +157,16 @@ class Timer(ContextDecorator):
         if self.recursive:
             return Timer.DEFAULT_KEY
 
-        return tuple(
-            (key, arg) for key, arg in chain(enumerate(args), sorted(kwargs.items()))
-            if isinstance(arg, Hashable)
-        )
+        arg_tuples: List[Tuple[Hashable, Hashable], ...] = []
+        for key, arg in chain(enumerate(args), sorted(kwargs.items())):
+            if not isinstance(arg, Hashable):
+                # skip the argument if it is not hashable
+                continue
+            if isinstance(arg, Message):
+                # convert protobuf message to string (raises an error when calling hash())
+                arg = MessageToString(arg)
+            arg_tuples.append((key, arg))
+        return tuple(arg_tuples)
 
 
 timing = Timer()
