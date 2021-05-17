@@ -100,6 +100,9 @@ class Timer(ContextDecorator):
         assert self._start_time
         elapsed_time = time.perf_counter() - self._start_time
 
+        # Reset the start time
+        self._start_time = None
+
         # Report elapsed time
         if self.logger:
             self.report(elapsed_time, func_name)
