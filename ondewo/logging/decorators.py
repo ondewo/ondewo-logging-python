@@ -17,11 +17,12 @@ import time
 import traceback
 import uuid
 from contextlib import ContextDecorator
+from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Optional, Union, List
 
 from ondewo.logging.constants import CONTEXT, EXCEPTION, FINISH, START
-from ondewo.logging.logger import logger_console, add_permanent_info, remove_permanent_info
+from ondewo.logging.logger import logger_console, config, add_permanent_info, remove_permanent_info
 
 
 @dataclass
@@ -267,11 +268,12 @@ class LogPermanentInfo(ContextDecorator):
     is going to contain the attached info (dictionary).
     Can be used as a Context Manager or a Decorator.
     """
-    logger: Optional[
-        Callable[[Union[str, Dict[str, Any]]], None]
-    ]
-    config: Dict[str, Any]
     info_to_log: Dict[str, Any]
+    config: Dict[str, Any] = None
+
+    def __post_init__(self):
+        if not self.config:
+            self.config = deepcopy(config)
 
     def __call__(self, func: Callable) -> Callable:  # type: ignore
         @functools.wraps(func)

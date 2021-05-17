@@ -242,11 +242,11 @@ def add_permanent_info(
         config: Dict[str, Any],
         info_dict: Dict[str, Any],
 ) -> None:
-    for k in info_dict.keys():
-        config["logging"]["formatters"]["fluent_console"]["format"][k] = info_dict[k]
-        config["logging"]["formatters"]["fluent_debug"]["format"][k] = info_dict[k]
+    for k, v in info_dict.items():
+        config["logging"]["formatters"]["fluent_console"]["format"][k] = v
+        config["logging"]["formatters"]["fluent_debug"]["format"][k] = v
 
-    _set_custom_logger(config)
+    logging.config.dictConfig(config["logging"])
 
 
 def remove_permanent_info(
@@ -257,7 +257,7 @@ def remove_permanent_info(
         config["logging"]["formatters"]["fluent_console"]["format"].pop(k)
         config["logging"]["formatters"]["fluent_debug"]["format"].pop(k)
 
-    _set_custom_logger(config)
+    logging.config.dictConfig(config["logging"])
 
 
 logger, logger_root, logger_debug, logger_console, config = create_logs()
