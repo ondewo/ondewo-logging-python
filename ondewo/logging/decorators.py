@@ -19,10 +19,12 @@ import uuid
 from collections import defaultdict
 from contextlib import ContextDecorator
 from dataclasses import dataclass, field
+from logging import Filter, Logger
 from threading import get_ident
 from typing import Any, Callable, Dict, Optional, TypeVar, Union
 
 from ondewo.logging.constants import CONTEXT, EXCEPTION, FINISH, START
+from ondewo.logging.filters import ContextFilter
 from ondewo.logging.logger import logger_console
 
 TF = TypeVar("TF", bound=Callable[..., Any])
@@ -270,3 +272,17 @@ def log_args_kwargs_results(  # type: ignore
                 **formatted_results,
             }
         )
+
+
+class ContextLogger(ContextDecorator):
+    def __init__(
+        self, context_dict: Dict[str, Any], logger: Optional[Logger] = None
+    ) -> None:
+        self.logger: Logger = logger or logger_console
+        self.filter: Filter = ContextFilter(context_dict=context_dict)
+
+    def __enter__(self):
+        self.logger.addFilter(self.filter)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.logger.removeFilter(self.filter)
