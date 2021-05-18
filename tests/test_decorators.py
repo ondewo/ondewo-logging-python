@@ -14,8 +14,9 @@
 import re
 from logging import Logger
 from multiprocessing.pool import ThreadPool
+from threading import Thread, get_ident
 from time import sleep
-from typing import Any, Callable, Dict, List, Union
+from typing import Any, Callable, Dict, List, Set, Union
 
 import pytest
 
@@ -468,7 +469,7 @@ class TestThreadContextLogger:
 
         logger.info(message)
 
-        with ThreadContextLogger(context_dict={"ctx": 123}):
+        with ThreadContextLogger(logger=logger, context_dict={"ctx": 123}):
             logger.info(message)
 
         logger.info(message)
@@ -514,7 +515,7 @@ class TestThreadContextLogger:
     ) -> None:
         logger.addHandler(log_store)
 
-        @ThreadContextLogger(context_dict={"ctx": 123})
+        @ThreadContextLogger(logger=logger, context_dict={"ctx": 123})
         def function(msg: str) -> None:
             logger.info(msg)
 
@@ -545,7 +546,33 @@ class TestThreadContextLogger:
     def test_thread_context_logger_in_multiple_threads(
         log_store: MockLoggingHandler,
         logger: Logger,
-        message: Any,
-        expected_message: Any,
     ) -> None:
-        pass
+        logger.addHandler(log_store)
+
+        def function(ctx: int) -> None:
+            with ThreadContextLogger(logger=logger, context_dict={"ctx": ctx}):
+                logger.info({"message": "start"})
+
+                sub_thread: Thread = Thread(
+                    target=lambda: logger.info({"message": "continue"}),
+                    name=f"sub-thread-{get_ident()}",
+                )
+                sub_thread.start()
+                sub_thread.join()
+
+                logger.info({"message": "end"})
+
+        n_threads: int = 10
+        with ThreadPool(processes=n_threads) as pool:
+            pool.map(function, range(n_threads))
+
+        messages: List[Dict[str, Any]] = [
+            eval(message) for message in log_store.messages["info"]
+        ]
+        for i in range(n_threads):
+            messages_ctx: Set[str] = {
+                message["message"] for message in messages if message["ctx"] == i
+            }
+            assert messages_ctx == {"start", "continue", "end"}
+
+        log_store.reset()
