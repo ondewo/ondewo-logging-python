@@ -24,7 +24,7 @@ from threading import get_ident
 from typing import Any, Callable, Dict, Optional, TypeVar, Union
 
 from ondewo.logging.constants import CONTEXT, EXCEPTION, FINISH, START
-from ondewo.logging.filters import ContextFilter
+from ondewo.logging.filters import ThreadContextFilter
 from ondewo.logging.logger import logger_console
 
 TF = TypeVar("TF", bound=Callable[..., Any])
@@ -274,15 +274,27 @@ def log_args_kwargs_results(  # type: ignore
         )
 
 
-class ContextLogger(ContextDecorator):
-    def __init__(
-        self, context_dict: Dict[str, Any], logger: Optional[Logger] = None
-    ) -> None:
-        self.logger: Logger = logger or logger_console
-        self.filter: Filter = ContextFilter(context_dict=context_dict)
+class ThreadContextLogger(ContextDecorator):
+    """Add per-thread context information using a class, context manager or decorator."""
 
-    def __enter__(self):
+    def __init__(
+        self,
+        context_dict: Optional[Dict[str, Any]] = None,
+        logger: Optional[Logger] = None,
+    ) -> None:
+        """
+
+        Args:
+            context_dict: optional context information to add to the logs from the current thread
+            logger: optional logger to add the information to (be default the global logger_console)
+        """
+        self.logger: Logger = logger or logger_console
+        self.filter: Filter = ThreadContextFilter(context_dict=context_dict)
+
+    def __enter__(self) -> None:
+        """Add the filter to the logger when entering the context."""
         self.logger.addFilter(self.filter)
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        """Remove the filter from the logger when leaving the context."""
         self.logger.removeFilter(self.filter)

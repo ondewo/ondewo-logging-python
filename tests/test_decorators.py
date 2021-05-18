@@ -21,6 +21,7 @@ import pytest
 
 from ondewo.logging.constants import CONTEXT
 from ondewo.logging.decorators import (
+    ThreadContextLogger,
     Timer,
     exception_handling,
     exception_silencing,
@@ -438,3 +439,113 @@ def test_timer_as_context_manager(log_store, logger) -> None:
     all_messages = " ".join(log_store.messages["warning"])
     assert "exception" in all_messages
     log_store.reset()
+
+
+class TestThreadContextLogger:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "message, expected_message",
+        [
+            # nothing happens when the message is a plain string
+            (
+                "hello",
+                "hello",
+            ),
+            # add a context if the message is a dict
+            (
+                {"message": "hello"},
+                {"message": "hello", "ctx": 123},
+            ),
+        ],
+    )
+    def test_thread_context_logger_as_context_manager(
+        log_store: MockLoggingHandler,
+        logger: Logger,
+        message: Any,
+        expected_message: Any,
+    ) -> None:
+        logger.addHandler(log_store)
+
+        logger.info(message)
+
+        with ThreadContextLogger(context_dict={"ctx": 123}):
+            logger.info(message)
+
+        logger.info(message)
+
+        logged_messages: List[str] = log_store.messages["info"]
+        assert len(logged_messages) == 3
+
+        for i, logged_message in enumerate(logged_messages):
+            try:
+                logged_message = eval(logged_message)
+            except NameError:
+                pass
+            if i == 1:
+                # message affected with the thread context logger
+                assert logged_message == expected_message
+            else:
+                # message before/after the thread context logger
+                assert logged_message == message
+
+        log_store.reset()
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "message, expected_message",
+        [
+            # nothing happens when the message is a plain string
+            (
+                "hello",
+                "hello",
+            ),
+            # add a context if the message is a dict
+            (
+                {"message": "hello"},
+                {"message": "hello", "ctx": 123},
+            ),
+        ],
+    )
+    def test_thread_context_logger_as_decorator(
+        log_store: MockLoggingHandler,
+        logger: Logger,
+        message: Any,
+        expected_message: Any,
+    ) -> None:
+        logger.addHandler(log_store)
+
+        @ThreadContextLogger(context_dict={"ctx": 123})
+        def function(msg: str) -> None:
+            logger.info(msg)
+
+        logger.info(message)
+
+        function(msg=message)
+
+        logger.info(message)
+
+        logged_messages: List[str] = log_store.messages["info"]
+        assert len(logged_messages) == 3
+
+        for i, logged_message in enumerate(logged_messages):
+            try:
+                logged_message = eval(logged_message)
+            except NameError:
+                pass
+            if i == 1:
+                # message affected with the thread context logger
+                assert logged_message == expected_message
+            else:
+                # message before/after the thread context logger
+                assert logged_message == message
+
+        log_store.reset()
+
+    @staticmethod
+    def test_thread_context_logger_in_multiple_threads(
+        log_store: MockLoggingHandler,
+        logger: Logger,
+        message: Any,
+        expected_message: Any,
+    ) -> None:
+        pass
