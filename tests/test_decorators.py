@@ -459,69 +459,34 @@ class TestThreadContextLogger:
             ),
         ],
     )
-    def test_thread_context_logger_as_context_manager(
-        log_store: MockLoggingHandler,
-        logger: Logger,
-        message: Any,
-        expected_message: Any,
-    ) -> None:
-        logger.addHandler(log_store)
-
-        logger.info(message)
-
-        with ThreadContextLogger(logger=logger, context_dict={"ctx": 123}):
-            logger.info(message)
-
-        logger.info(message)
-
-        logged_messages: List[str] = log_store.messages["info"]
-        assert len(logged_messages) == 3
-
-        for i, logged_message in enumerate(logged_messages):
-            try:
-                logged_message = eval(logged_message)
-            except NameError:
-                pass
-            if i == 1:
-                # message affected with the thread context logger
-                assert logged_message == expected_message
-            else:
-                # message before/after the thread context logger
-                assert logged_message == message
-
-        log_store.reset()
-
-    @staticmethod
     @pytest.mark.parametrize(
-        "message, expected_message",
-        [
-            # nothing happens when the message is a plain string
-            (
-                "hello",
-                "hello",
-            ),
-            # add a context if the message is a dict
-            (
-                {"message": "hello"},
-                {"message": "hello", "ctx": 123},
-            ),
-        ],
+        "thread_context_logger_type", ["context_manager", "decorator"]
     )
-    def test_thread_context_logger_as_decorator(
+    def test_thread_context_logger(
         log_store: MockLoggingHandler,
         logger: Logger,
+        thread_context_logger_type: str,
         message: Any,
         expected_message: Any,
     ) -> None:
         logger.addHandler(log_store)
 
-        @ThreadContextLogger(logger=logger, context_dict={"ctx": 123})
+        thread_context_logger: ThreadContextLogger = ThreadContextLogger(
+            logger=logger,
+            context_dict={"ctx": 123},
+        )
+
+        @thread_context_logger
         def function(msg: str) -> None:
             logger.info(msg)
 
         logger.info(message)
 
-        function(msg=message)
+        if thread_context_logger_type == "context_manager":
+            with thread_context_logger:
+                logger.info(message)
+        elif thread_context_logger_type == "decorator":
+            function(msg=message)
 
         logger.info(message)
 
