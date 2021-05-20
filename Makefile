@@ -19,7 +19,7 @@ run_tests: ## Start a server then a little docker image to run the e2e tests in
 	docker run --rm --network host -e RESULTS=x -e TESTFILE=${TESTFILE} pytest_image
 
 push_to_pypi: build_package upload_package clear_package_data
-	echo pushed to pypi : )
+	echo pushed to pypi : \)
 
 build_package:
 	python setup.py sdist bdist_wheel

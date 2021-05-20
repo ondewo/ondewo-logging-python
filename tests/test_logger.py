@@ -14,22 +14,39 @@
 
 import json
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
 
 import pytest
 
-from ondewo.logging.logger import logger, logger_console, logger_debug, logger_root, flatten_json, CustomLogger
+from ondewo.logging.logger import (
+    CustomLogger,
+    flatten_json,
+    logger,
+    logger_console,
+    logger_debug,
+    logger_root,
+)
 
 
 class _Resources:
-    test_grpc_request = {"message": 'Got request (type <class \'ondewo.nlu.user_pb2.TestRequest\'>): {'
-                                    '"userEmail": "asd@asd.hu", "password": "asa", "stop_phrases_config": {'
-                                    '"stop_phrase_files": {"nested": "test"}, "remove_punctuation": false, '
-                                    '"active": false}}', "tags": ["test"]}
-    json_input = {"userEmail": "asd@asd.hu",
-                  "password": "asa",
-                  "stop_phrases_config": {"stop_phrase_files": {"nested": "test", "other": ["some", "list"]},
-                                          "remove_punctuation": False, "active": False}}
+    test_grpc_request: Dict[str, Any] = {
+        "message": "Got request (type <class 'ondewo.nlu.user_pb2.TestRequest'>): {\"userEmail\": "
+        '"asd@asd.hu", "password": "asa", "stop_phrases_config": {"stop_phrase_files": '
+        '{"nested": "test"}, "remove_punctuation": false, "active": false}}',
+        "tags": ["test"],
+    }
+    json_input: Dict[str, Any] = {
+        "userEmail": "asd@asd.hu",
+        "password": "asa",
+        "stop_phrases_config": {
+            "stop_phrase_files": {
+                "nested": "test",
+                "other": ["some", "list"],
+            },
+            "remove_punctuation": False,
+            "active": False,
+        },
+    }
 
 
 def test_log(log_store):
@@ -216,42 +233,46 @@ def test_cai_grpc_converter(logger, log_store):
 
 
 @pytest.mark.parametrize(
-    'json_input, expected, max_level',
+    "json_input, expected, max_level",
     [
+        (_Resources.json_input, {}, 0),
         (
-                _Resources.json_input,
-                {},
-                0
+            _Resources.json_input,
+            {
+                "password": "asa",
+                "stop_phrases_config": "<TRUNCATED!>",
+                "userEmail": "asd@asd.hu",
+            },
+            1,
         ),
         (
-                _Resources.json_input,
-                {'password': 'asa',
-                 'stop_phrases_config': '<TRUNCATED!>',
-                 'userEmail': 'asd@asd.hu'},
-                1
+            _Resources.json_input,
+            {
+                "password": "asa",
+                "stop_phrases_config|active": False,
+                "stop_phrases_config|remove_punctuation": False,
+                "stop_phrases_config|stop_phrase_files": "<TRUNCATED!>",
+                "userEmail": "asd@asd.hu",
+            },
+            2,
         ),
         (
-                _Resources.json_input,
-                {'password': 'asa',
-                 'stop_phrases_config|active': False,
-                 'stop_phrases_config|remove_punctuation': False,
-                 'stop_phrases_config|stop_phrase_files': '<TRUNCATED!>',
-                 'userEmail': 'asd@asd.hu'},
-                2
+            _Resources.json_input,
+            {
+                "password": "asa",
+                "stop_phrases_config|active": False,
+                "stop_phrases_config|remove_punctuation": False,
+                "stop_phrases_config|stop_phrase_files|nested": "test",
+                "stop_phrases_config|stop_phrase_files|other": ["some", "list"],
+                "userEmail": "asd@asd.hu",
+            },
+            3,
         ),
-        (
-                _Resources.json_input,
-                {'password': 'asa',
-                 'stop_phrases_config|active': False,
-                 'stop_phrases_config|remove_punctuation': False,
-                 'stop_phrases_config|stop_phrase_files|nested': 'test',
-                 'stop_phrases_config|stop_phrase_files|other': ['some', 'list'],
-                 'userEmail': 'asd@asd.hu'},
-                3
-        )
-    ]
+    ],
 )
-def test_flatten_json(json_input: Dict[Any, Any], expected: Dict[Any, Any], max_level: int) -> None:
+def test_flatten_json(
+    json_input: Dict[Any, Any], expected: Dict[Any, Any], max_level: int
+) -> None:
     if max_level == 0:
         with pytest.raises(AssertionError):
             flatten_json(json_input, max_level=max_level)
@@ -261,20 +282,14 @@ def test_flatten_json(json_input: Dict[Any, Any], expected: Dict[Any, Any], max_
 
 
 @pytest.mark.parametrize(
-    'input_string, expected',
+    "input_string, expected",
     [
-        (
-                _Resources.test_grpc_request['message'],
-                'ondewo.nlu.user_pb2.TestRequest'
-        ),
-        (
-                'invalid string value',
-                ''
-        )
-    ]
+        (_Resources.test_grpc_request["message"], "ondewo.nlu.user_pb2.TestRequest"),
+        ("invalid string value", ""),
+    ],
 )
 def test_extract_grpc_request_class(input_string: str, expected: str) -> None:
-    if input_string == 'invalid string value':
+    if input_string == "invalid string value":
         with pytest.raises(AssertionError):
             CustomLogger.extract_grpc_request_class(input_string)
     else:
@@ -283,9 +298,13 @@ def test_extract_grpc_request_class(input_string: str, expected: str) -> None:
 
 
 def test_extract_grpc_message() -> None:
-    expected: str = json.loads('{"userEmail": "asd@asd.hu", "password": "asa", '
-                               '"stop_phrases_config|stop_phrase_files|nested": "test", '
-                               '"stop_phrases_config|remove_punctuation": false, '
-                               '"stop_phrases_config|active": false}')
-    result: Dict = CustomLogger.extract_grpc_message(_Resources.test_grpc_request['message'], {})
+    expected: str = json.loads(
+        '{"userEmail": "asd@asd.hu", "password": "asa", '
+        '"stop_phrases_config|stop_phrase_files|nested": "test", '
+        '"stop_phrases_config|remove_punctuation": false, '
+        '"stop_phrases_config|active": false}'
+    )
+    result: Dict = CustomLogger.extract_grpc_message(
+        _Resources.test_grpc_request["message"], {}
+    )
     assert result == expected
