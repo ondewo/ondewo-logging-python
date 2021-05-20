@@ -3,9 +3,15 @@
 
 ## Release ONDEWO LOGGING PYTHON 2.0.2
 
+### New Features
+
+* [OND233-212] enable decorators to be used in concurrent function execution
+* [OND233-212] add thread context logger, which attaches thread-specific context information to all the logs
+
 ### Bug Fixes
 
 * fix error logging bug related to exc.args iterable
+* [OND233-212] fix duration in Timer decorator
 
 *****************
 ## Release ONDEWO LOGGING PYTHON 2.0.1
