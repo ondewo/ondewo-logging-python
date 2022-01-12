@@ -2,12 +2,14 @@ PACKAGE_FOLDER := ondewo-logging-python
 TESTFILE := ondewo
 CODE_CHECK_IMAGE := code_check_image_${TESTFILE}
 IMAGE_NAME := dockerregistry.ondewo.com:5000/ondewo-
+FLUENTD_PATH := ondewo-logging/fluentd
 
 all: setup_folders
 
 setup_folders:
-	mkdir fluentd/log -p
-	sudo chown -R 100:$$(id -u) fluentd/log
+	git submodule update --init
+	mkdir ${FLUENTD_PATH}/log -p
+	sudo chown -R 100:$$(id -u) ${FLUENTD_PATH}/log
 
 run_code_checks: ## Start the code checks image and run the checks
 	docker build -t ${CODE_CHECK_IMAGE} --build-arg FOLDER_NAME=${TESTFILE} -f dockerfiles/code_checks.Dockerfile .
