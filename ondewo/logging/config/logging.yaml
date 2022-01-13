@@ -41,7 +41,7 @@ logging:
         console:
             class: logging.StreamHandler
             level: DEBUG
-            formatter: brief
+            formatter: debug
             stream: ext://sys.stdout
         debug:
             class: logging.StreamHandler
