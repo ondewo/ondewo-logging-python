@@ -26,7 +26,6 @@ from ondewo.logging.logger import (
     logger_debug,
     logger_root,
 )
-from ondewo.logging.logger import logger_debug, logger_console, logger_root
 
 
 class _Resources:

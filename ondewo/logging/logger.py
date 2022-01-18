@@ -115,8 +115,8 @@ def import_config() -> Dict[str, Any]:
     :param:
     :return:    logging config as a dictionary
     """
-    if os.path.exists("./logging.yaml"):
-        config_path: str = "./logging.yaml"
+    if os.path.exists("/home/ondewo/logging.yaml"):
+        config_path: str = "/home/ondewo/logging.yaml"
     else:
         parent: str = os.path.abspath(os.path.dirname(file_anchor.__file__))
         config_path = f"{parent}/config/logging.yaml"
