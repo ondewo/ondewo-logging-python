@@ -1,6 +1,18 @@
 # Release History
 *****************
 
+## Release ONDEWO LOGGING PYTHON 3.0.0
+
+### Improvements
+* Make logging read yaml from another location (/home/ondewo/logging.yaml)
+* Update fluent-logger to 0.10.0
+* Change console logger to use debug handler by default
+
+### Breaking Changes
+* Remove fluentd
+
+*****************
+
 ## Release ONDEWO LOGGING PYTHON 2.0.3
 
 ### New Features
