@@ -145,9 +145,9 @@ def set_module_name(
     conf["logging"]["formatters"]["fluent_console"]["format"]["git_repo_name"] = git_repo_name
     conf["logging"]["formatters"]["fluent_console"]["format"]["docker_image_name"] = docker_image_name
 
-    conf["logging"]["formatters"]["debug"]["format"]["module_name"] = module_name
-    conf["logging"]["formatters"]["debug"]["format"]["git_repo_name"] = git_repo_name
-    conf["logging"]["formatters"]["debug"]["format"]["docker_image_name"] = docker_image_name
+    # conf["logging"]["formatters"]["debug"]["format"]["module_name"] = module_name
+    # conf["logging"]["formatters"]["debug"]["format"]["git_repo_name"] = git_repo_name
+    # conf["logging"]["formatters"]["debug"]["format"]["docker_image_name"] = docker_image_name
 
     return conf
 
