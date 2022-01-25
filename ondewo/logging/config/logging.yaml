@@ -46,7 +46,7 @@ logging:
         debug:
             class: logging.StreamHandler
             level: DEBUG
-            formatter: debug
+            formatter: fluent_debug
             stream: ext://sys.stdout
         fluent-console:
             class: fluent.handler.FluentHandler
