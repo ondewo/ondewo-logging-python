@@ -3,6 +3,7 @@ TESTFILE := ondewo
 CODE_CHECK_IMAGE := code_check_image_${TESTFILE}
 IMAGE_NAME := {{{FILL ME PLEASE}}}
 
+
 run_code_checks: ## Start the code checks image and run the checks
 	docker build -t ${CODE_CHECK_IMAGE} --build-arg FOLDER_NAME=${TESTFILE} -f dockerfiles/code_checks.Dockerfile .
 	docker run --rm ${CODE_CHECK_IMAGE} make flake8
