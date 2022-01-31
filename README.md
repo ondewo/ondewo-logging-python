@@ -22,6 +22,9 @@ then import it into your project like so:
 from ondewo.logging.logger import logger_console
 ```
 
+#### Note
+In order for logger to log ```module_name```, ```docker_image_name```, and ```git_repo_name``` one has to pass them as environment variables to the container where the logged service is running.
+
 ## Decorators
 
 A couple of decorators are included:
