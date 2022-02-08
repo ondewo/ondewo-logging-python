@@ -8,6 +8,10 @@
 * Update fluent-logger to 0.10.0
 * Change console logger to use debug handler by default
 
+### Bug Fixes
+* Reformat some files
+* Update readme
+
 *****************
 
 ## Release ONDEWO LOGGING PYTHON 3.0.0
