@@ -1,4 +1,11 @@
+*****************
 # Release History
+*****************
+
+## Release ONDEWO LOGGING PYTHON 3.2.1
+
+### Bug Fixes
+* Makefile and release automation
 
 *****************
 
