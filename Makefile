@@ -27,7 +27,7 @@ export
 
 # MUST BE THE SAME AS API in Mayor and Minor Version Number
 # example: API 2.9.0 --> Client 2.9.X
-ONDEWO_LOGGING_VERSION=3.2.0
+ONDEWO_LOGGING_VERSION=3.2.1
 
 
 PYPI_USERNAME?=ENTER_HERE_YOUR_PYPI_USERNAME
@@ -41,7 +41,7 @@ CURRENT_RELEASE_NOTES=`cat RELEASE.md \
 
 
 # Choose repo to release to - Example: "https://github.com/ondewo/ondewo-nlu-client-python"
-GH_REPO="https://github.com/ondewo/ondewo-loggin-python"
+GH_REPO="https://github.com/ondewo/ondewo-logging-python"
 
 # Submodule paths
 
