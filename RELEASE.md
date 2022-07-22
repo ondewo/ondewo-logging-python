@@ -1,4 +1,12 @@
 # Release History
+
+*****************
+
+## Release ONDEWO LOGGING PYTHON 3.2.0
+
+### Improvements
+* Release Automation
+
 *****************
 
 ## Release ONDEWO LOGGING PYTHON 3.1.0
