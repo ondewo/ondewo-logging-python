@@ -8,3 +8,5 @@ ondewo_logging.egg-info/
 venv*/
 build/
 dist/
+.vscode
+.idea
