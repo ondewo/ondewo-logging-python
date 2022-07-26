@@ -1,6 +1,12 @@
 *****************
 # Release History
 *****************
+## Release ONDEWO LOGGING PYTHON 3.2.2
+
+### Bug Fixes
+* Added setuptools>=59.5.0 to requirements
+
+*****************
 
 ## Release ONDEWO LOGGING PYTHON 3.2.1
 
