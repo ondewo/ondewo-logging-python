@@ -1,6 +1,12 @@
 *****************
 # Release History
 *****************
+## Release ONDEWO LOGGING PYTHON 3.2.3
+
+### Bug Fixes
+logging.yaml was not included in the build
+
+*****************
 ## Release ONDEWO LOGGING PYTHON 3.2.2
 
 ### Bug Fixes

@@ -8,7 +8,7 @@ with open('requirements.txt') as f:
 
 setuptools.setup(
     name='ondewo-logging',
-    version='3.2.2',
+    version='3.2.3',
     author='Ondewo GmbH',
     author_email='info@ondewo.com',
     description='This library provides custom logging for python including error handling and timing.',
