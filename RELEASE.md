@@ -1,6 +1,13 @@
 *****************
 # Release History
 *****************
+## Release ONDEWO LOGGING PYTHON 3.2.5
+
+### Bug Fixes
+logging.yaml was not included in the build, because MANIFEST.in was not
+included in the Dockerfile.utils
+
+*****************
 ## Release ONDEWO LOGGING PYTHON 3.2.4
 
 ### Bug Fixes

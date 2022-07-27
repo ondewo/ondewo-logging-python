@@ -37,6 +37,8 @@ COPY setup.cfg .
 
 COPY README.md .
 
+COPY MANIFEST.in .
+
 COPY RELEASE.md .
 
 COPY ondewo ondewo
