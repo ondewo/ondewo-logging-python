@@ -27,7 +27,7 @@ export
 
 # MUST BE THE SAME AS API in Mayor and Minor Version Number
 # example: API 2.9.0 --> Client 2.9.X
-ONDEWO_LOGGING_VERSION=3.2.4
+ONDEWO_LOGGING_VERSION=3.2.5
 
 
 PYPI_USERNAME?=ENTER_HERE_YOUR_PYPI_USERNAME
@@ -96,6 +96,20 @@ push_to_pypi_via_docker_image:  ## Push source code to pypi via docker
 		-e PYPI_PASSWORD=${PYPI_PASSWORD} \
 		${IMAGE_UTILS_NAME} make push_to_pypi
 	rm -rf dist
+
+show_pypi: build_package
+	tar xvfz dist/ondewo-logging-${ONDEWO_LOGGING_VERSION}.tar.gz
+	tree ondewo-logging-${ONDEWO_LOGGING_VERSION}
+
+show_pypi_via_docker_image: build_utils_docker_image ## Push source code to pypi via docker
+	[ -d $(OUTPUT_DIR) ] || mkdir -p $(OUTPUT_DIR)
+	docker run --rm \
+		-v ${shell pwd}/dist:/home/ondewo/dist \
+		-e PYPI_USERNAME=${PYPI_USERNAME} \
+		-e PYPI_PASSWORD=${PYPI_PASSWORD} \
+		${IMAGE_UTILS_NAME} make show_pypi
+	rm -rf dist
+
 
 push_to_pypi: build_package upload_package clear_package_data
 	@echo 'YAY - Pushed to pypi : )'

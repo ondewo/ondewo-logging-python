@@ -1,8 +1,6 @@
 global-exclude *.pyc
 global-include logging.yaml
 include LICENSE
-include *.yaml
 include ondewo/*
-include ondewo/logging/config/logging.yaml
 include requirements.txt
 include setup.py

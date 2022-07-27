@@ -33,9 +33,21 @@ COPY requirements.txt .
 
 COPY setup.py  .
 
+COPY .isort.cfg  .
+
+COPY .flake8  .
+
+COPY .pre-commit-config.yaml  .
+
+COPY LICENSE  .
+
 COPY setup.cfg .
 
+COPY mypy.ini .
+
 COPY README.md .
+
+COPY MANIFEST.in .
 
 COPY RELEASE.md .
 
