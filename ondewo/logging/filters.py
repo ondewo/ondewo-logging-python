@@ -8,7 +8,7 @@ class ThreadContextFilter(Filter):
     """This filter adds a dictionary with context info to each log record logged in the current thread."""
 
     def __init__(
-        self, name: str = "", context_dict: Optional[Dict[str, Any]] = None
+            self, name: str = "", context_dict: Optional[Dict[str, Any]] = None
     ) -> None:
         """
 
@@ -51,5 +51,5 @@ class ThreadContextFilter(Filter):
             True if the record comes from the same thread as the thread of filter initialization
         """
         return (
-            record.thread == self.thread_id or str(self.thread_id) in record.threadName
+            record.thread == self.thread_id or str(self.thread_id) in record.threadName  # type:ignore
         )

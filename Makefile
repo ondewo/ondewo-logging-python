@@ -52,9 +52,36 @@ IMAGE_UTILS_NAME=ondewo-logging-utils-python:${ONDEWO_LOGGING_VERSION}
 
 .DEFAULT_GOAL := help
 
-# First comment after target starting with double ## specifies usage
-help:  ## Print usage info about help targets
-	@grep -E '(^[a-zA-Z_-]+:.*?##.*$$)|(^##)' Makefile | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-30s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
+########################################################
+#       ONDEWO Standard Make Targets
+########################################################
+
+setup_developer_environment_locally: install_precommit_hooks install_dependencies_locally
+
+install_precommit_hooks: ## Installs pre-commit hooks and sets them up for the ondewo-csi-client repo
+	pip install pre-commit
+	pre-commit install
+	pre-commit install --hook-type commit-msg
+
+precommit_hooks_run_all_files: ## Runs all pre-commit hooks on all files and not just the changed ones
+	pre-commit run --all-file
+
+install_dependencies_locally: ## Install dependencies locally
+	pip install -r requirements-dev.txt
+	pip install -r requirements.txt
+
+flake8: ## Runs flake8
+	flake8 .
+
+mypy: ## Run mypy static code checking
+	pre-commit run mypy --all-files
+
+help: ## Print usage info about help targets
+	# (first comment after target starting with double hashes ##)
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' Makefile | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
+makefile_chapters: ## Shows all sections of Makefile
+	@echo `cat Makefile| grep "########################################################" -A 1 | grep -v "########################################################"`
 
 # BEFORE "release"
 update_setup: ## Update Logging Version in setup.py

@@ -19,7 +19,7 @@ import sys
 import yaml
 from dotenv import load_dotenv
 
-import ondewo.logging.__init__ as file_anchor
+import ondewo.logging.__init__ as file_anchor  # type: ignore
 
 load_dotenv()
 MODULE_NAME = os.getenv("MODULE_NAME", "")

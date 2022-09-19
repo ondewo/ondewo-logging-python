@@ -22,7 +22,7 @@ from typing import Any, Dict, Optional, Tuple
 import yaml
 from dotenv import load_dotenv
 
-import ondewo.logging.__init__ as file_anchor
+import ondewo.logging.__init__ as file_anchor  # type:ignore
 
 load_dotenv()
 MODULE_NAME: str = os.getenv("MODULE_NAME", "")
@@ -128,7 +128,7 @@ def import_config() -> Dict[str, Any]:
 
 
 def set_module_name(
-    module_name: str, git_repo_name: str, docker_image_name: str, conf: Dict[str, Any]
+        module_name: str, git_repo_name: str, docker_image_name: str, conf: Dict[str, Any]
 ) -> Dict[str, Any]:
     """
     Sets the module name as given in the env on deployment.

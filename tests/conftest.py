@@ -17,7 +17,6 @@ from typing import Iterator
 
 import pytest
 
-from ondewo.logging.logger import logger_console
 from ondewo.logging.logger import logger_debug
 
 
@@ -64,4 +63,3 @@ def logger() -> Iterator[logging.Logger]:
     while len(logger.handlers) > 1:
         logger.handlers.pop()
     yield logger
-
