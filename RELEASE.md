@@ -1,28 +1,44 @@
 *****************
 # Release History
 *****************
+
+## Release ONDEWO LOGGING PYTHON 3.2.6
+
+### Bug Fixes
+
+* Bug fix function name
+
+*****************
+
 ## Release ONDEWO LOGGING PYTHON 3.2.5
 
 ### Bug Fixes
-logging.yaml was not included in the build, because MANIFEST.in was not
-included in the Dockerfile.utils
+
+* logging.yaml was not included in the build, because MANIFEST.in was not
+  included in the Dockerfile.utils
 
 *****************
+
 ## Release ONDEWO LOGGING PYTHON 3.2.4
 
 ### Bug Fixes
-logging.yaml was not included in the build
+
+* logging.yaml was not included in the build
 
 *****************
+
 ## Release ONDEWO LOGGING PYTHON 3.2.3
 
 ### Bug Fixes
-logging.yaml was not included in the build
+
+* logging.yaml was not included in the build
 
 *****************
+
 ## Release ONDEWO LOGGING PYTHON 3.2.2
 
 ### Bug Fixes
+
 * Added setuptools>=59.5.0 to requirements
 
 *****************
@@ -30,6 +46,7 @@ logging.yaml was not included in the build
 ## Release ONDEWO LOGGING PYTHON 3.2.1
 
 ### Bug Fixes
+
 * Makefile and release automation
 
 *****************
@@ -37,6 +54,7 @@ logging.yaml was not included in the build
 ## Release ONDEWO LOGGING PYTHON 3.2.0
 
 ### Improvements
+
 * Release Automation
 
 *****************
@@ -44,13 +62,16 @@ logging.yaml was not included in the build
 ## Release ONDEWO LOGGING PYTHON 3.1.0
 
 ### Breaking Changes
+
 * Make logging read yaml from another location (/home/ondewo/logging.yaml)
 
 ### Improvements
+
 * Update fluent-logger to 0.10.0
 * Change console logger to use debug handler by default
 
 ### Bug Fixes
+
 * Reformat some files
 * Update readme
 
@@ -59,6 +80,7 @@ logging.yaml was not included in the build
 ## Release ONDEWO LOGGING PYTHON 3.0.0
 
 ### Breaking Changes
+
 * Remove fluentd
 
 *****************
@@ -66,10 +88,12 @@ logging.yaml was not included in the build
 ## Release ONDEWO LOGGING PYTHON 2.0.3
 
 ### New Features
+
 * [OND233-212] enable decorators to be used in concurrent function execution
 * [OND233-212] add thread context logger, which attaches thread-specific context information to all the logs
 
 ### Bug Fixes
+
 * [OND233-212] fix duration in Timer decorator
 
 *****************
@@ -81,6 +105,7 @@ logging.yaml was not included in the build
 * fix error logging bug related to exc.args iterable
 
 *****************
+
 ## Release ONDEWO LOGGING PYTHON 2.0.1
 
 ### Bug Fixes
@@ -103,16 +128,16 @@ logging.yaml was not included in the build
 
 * pip install "ondewo-logging==2.0.0"
 
-
 *****************
+
 ## Release ONDEWO LOGGING PYTHON 1.6.1
 
 ### Bug Fixes
 
 * fixed bug in exception_handling decorator
 
-
 *****************
+
 ## Release ONDEWO LOGGING PYTHON 1.6.0
 
 ### New Features
@@ -140,6 +165,7 @@ Easier to import logging config.
 
 
 *****************
+
 ## Release ONDEWO LOGGING PYTHON 1.5.0
 
 ### New Features
@@ -159,6 +185,7 @@ Moving to Github! So old installs wont work anymore.
 [Replace submodule](https://stackoverflow.com/a/1260982/7756727) in the client.
 
 *****************
+
 # RELEASE TEMPLATE
 
 ### New Features
