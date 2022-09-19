@@ -62,9 +62,19 @@ class Timer(ContextDecorator):
                 value: Any = func(*args, **kwargs)
             except Exception as exc:
                 trace = traceback.format_exc()
-                log_exception(type(exc), next(iter(exc.args), None), trace, func.__name__, self.logger)  # type: ignore
+
+                function_name: str = "UNKNOWN_FUNCTION_NAME"
+                if hasattr(func, '__name__'):
+                    function_name = func.__name__
+                elif hasattr(func, '__str__'):
+                    function_name = func.__str__  # type: ignore
+                else:
+                    function_name = "UNKNOWN_FUNCTION_NAME"
+
+                log_exception(type(exc), next(iter(exc.args), None), trace, function_name, self.logger)  # type: ignore
+
                 if not self.suppress_exceptions:
-                    self.stop(func.__name__)
+                    self.stop(function_name)
                     raise
                 value = "An exception occurred!"
 
@@ -82,12 +92,17 @@ class Timer(ContextDecorator):
         """Start a new timer"""
         thread_id: int = get_ident()
         if func:
+
+            function_name: str = "UNKNOWN_FUNCTION_NAME"
             if hasattr(func, '__name__'):
-                self.logger({"message": START.format(func.__name__, thread_id)})
+                function_name = func.__name__
             elif hasattr(func, '__str__'):
-                self.logger({"message": START.format(func.__str__, thread_id)})
+                function_name = func.__str__  # type: ignore
             else:
-                self.logger({"message": START.format("UNKNOWN_FUNCTION_NAME", thread_id)})
+                function_name = "UNKNOWN_FUNCTION_NAME"
+
+            self.logger({"message": START.format(function_name, thread_id)})
+
         if thread_id in self._start_times:
             if self.recursive:
                 self.recurse_depths[thread_id] += 1
@@ -174,7 +189,16 @@ def exception_silencing(func: Callable) -> Callable:
         try:
             return func(*args, **kwargs)
         except Exception as exc:
-            log_exception(type(exc), next(iter(exc.args), None), None, func.__name__)
+
+            function_name: str = "UNKNOWN_FUNCTION_NAME"
+            if hasattr(func, '__name__'):
+                function_name = func.__name__
+            elif hasattr(func, '__str__'):
+                function_name = func.__str__  # type: ignore
+            else:
+                function_name = "UNKNOWN_FUNCTION_NAME"
+
+            log_exception(type(exc), next(iter(exc.args), None), None, function_name)
             log_args_kwargs_results(func, None, -1, None, *args, **kwargs)
         return None
 
