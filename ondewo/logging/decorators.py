@@ -82,7 +82,12 @@ class Timer(ContextDecorator):
         """Start a new timer"""
         thread_id: int = get_ident()
         if func:
-            self.logger({"message": START.format(func.__name__, thread_id)})
+            if hasattr(func, '__name__'):
+                self.logger({"message": START.format(func.__name__, thread_id)})
+            elif hasattr(func, '__str__'):
+                self.logger({"message": START.format(func.__str__, thread_id)})
+            else:
+                self.logger({"message": START.format("UNKNOWN_FUNCTION_NAME", thread_id)})
         if thread_id in self._start_times:
             if self.recursive:
                 self.recurse_depths[thread_id] += 1
@@ -118,10 +123,10 @@ class Timer(ContextDecorator):
         return elapsed_time
 
     def report(
-        self,
-        elapsed_time: float,
-        func_name: Optional[str] = None,
-        thread_id: Optional[int] = None,
+            self,
+            elapsed_time: float,
+            func_name: Optional[str] = None,
+            thread_id: Optional[int] = None,
     ) -> None:
         name: str = func_name or CONTEXT
 
@@ -217,11 +222,11 @@ def log_arguments(func: Callable) -> Callable:
 
 
 def log_exception(
-    exc_type: Any,
-    exc_val: Optional[str],
-    traceback_str: Optional[str],
-    function_name: str,
-    logger: Callable[[Union[str, Dict[str, Any]]], None] = logger_console.error,
+        exc_type: Any,
+        exc_val: Optional[str],
+        traceback_str: Optional[str],
+        function_name: str,
+        logger: Callable[[Union[str, Dict[str, Any]]], None] = logger_console.error,
 ) -> None:
     """
     Formats and logs an exception.
@@ -238,12 +243,12 @@ def log_exception(
 
 
 def log_args_kwargs_results(  # type: ignore
-    func: TF,
-    result: Any,
-    argument_max_length: int = -1,
-    logger: Optional[Callable[..., None]] = logger_console.warning,
-    *args,
-    **kwargs,
+        func: TF,
+        result: Any,
+        argument_max_length: int = -1,
+        logger: Optional[Callable[..., None]] = logger_console.warning,
+        *args,
+        **kwargs,
 ) -> None:
     def truncate_arg(arg_to_truncate: Any) -> str:
         arg_str: str = str(arg_to_truncate)
@@ -278,9 +283,9 @@ class ThreadContextLogger(ContextDecorator):
     """Add per-thread context information using a class, context manager or decorator."""
 
     def __init__(
-        self,
-        context_dict: Optional[Dict[str, Any]] = None,
-        logger: Optional[Logger] = None,
+            self,
+            context_dict: Optional[Dict[str, Any]] = None,
+            logger: Optional[Logger] = None,
     ) -> None:
         """
 
