@@ -62,10 +62,9 @@ def test_timer(log_store, logger):
         sleep(0.01)
     assert log_store.count_levels("warning") == 7
 
-    # INFO: does not work
-    # with timing:
-    #     sleep(0.01)
-    # assert log_store.count_levels("warning") == 8
+    with timing:
+        sleep(0.01)
+    assert log_store.count_levels("warning") == 8
 
 
 def test_timer_messages(log_store, logger):
