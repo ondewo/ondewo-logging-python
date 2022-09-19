@@ -39,7 +39,7 @@ class Timer(ContextDecorator):
     logger: Callable[..., None] = logger_console.warning
     _start_times: Dict[int, float] = field(default_factory=dict, init=False, repr=False)
     log_arguments: bool = True
-    suppress_exceptions: bool = True
+    suppress_exceptions: bool = False
     recursive: bool = False
     recurse_depths: Dict[int, float] = field(default_factory=lambda: defaultdict(float))
     argument_max_length: int = 10000
