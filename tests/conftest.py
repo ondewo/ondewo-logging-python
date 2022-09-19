@@ -17,7 +17,7 @@ from typing import Iterator
 
 import pytest
 
-from ondewo.logging.logger import logger_debug
+from ondewo.logging.logger import logger_console
 
 
 class MockLoggingHandler(logging.Handler):
@@ -59,7 +59,7 @@ def log_store() -> Iterator[MockLoggingHandler]:
 
 @pytest.fixture(scope="function")
 def logger() -> Iterator[logging.Logger]:
-    logger = logger_debug
+    logger = logger_console
     while len(logger.handlers) > 1:
         logger.handlers.pop()
     yield logger

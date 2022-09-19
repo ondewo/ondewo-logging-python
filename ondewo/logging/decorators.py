@@ -25,7 +25,7 @@ from typing import Any, Callable, Dict, Optional, TypeVar, Union
 
 from ondewo.logging.constants import CONTEXT, EXCEPTION, FINISH, START
 from ondewo.logging.filters import ThreadContextFilter
-from ondewo.logging.logger import logger_console
+from ondewo.logging.logger import logger_console, logger
 
 TF = TypeVar("TF", bound=Callable[..., Any])
 
