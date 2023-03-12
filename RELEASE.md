@@ -1,5 +1,15 @@
 *****************
+
 # Release History
+
+*****************
+
+## Release ONDEWO LOGGING PYTHON 3.2.8
+
+### Bug Fixes
+
+* Added exception handling
+
 *****************
 
 ## Release ONDEWO LOGGING PYTHON 3.2.7
