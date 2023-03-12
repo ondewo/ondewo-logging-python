@@ -66,11 +66,10 @@ repos:
             -   id: requirements-txt-fixer  # Sorts the requirement.txt files' content
                 files: 'requirements/requirements.*\.txt$'
 
-    -   repo: https://gitlab.com/pycqa/flake8
-        rev: 4.0.1
+    -   repo: https://github.com/pycqa/flake8
+        rev: 6.0.0
         hooks:
             -   id: flake8
-                exclude: ondewo/
 
     -   repo: https://github.com/milin/giticket
         rev: d4a4c3b943892add7ee86d0d54a1e41c76b1fced

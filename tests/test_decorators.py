@@ -14,9 +14,19 @@
 import re
 from logging import Logger
 from multiprocessing.pool import ThreadPool
-from threading import Thread, get_ident
+from threading import (
+    Thread,
+    get_ident,
+)
 from time import sleep
-from typing import Any, Callable, Dict, List, Set, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Set,
+    Union,
+)
 
 import pytest
 
@@ -28,7 +38,10 @@ from ondewo.logging.decorators import (
     exception_silencing,
     timing,
 )
-from ondewo.logging.logger import logger_console
+from ondewo.logging.logger import (
+    logger,
+    logger_console,
+)
 from tests.conftest import MockLoggingHandler
 
 
@@ -332,13 +345,13 @@ def concat_two_strings_length_minus_one(a: str, b: str) -> str:
     ],
 )
 def test_length_filter(
-        log_store: MockLoggingHandler,
-        logger: Logger,
-        function: Callable,
-        param_a: Union[str, int],
-        param_b: Union[str, int],
-        assert_args: List[str],
-        assert_kwargs: List[str],
+    log_store: MockLoggingHandler,
+    logger: Logger,
+    function: Callable,
+    param_a: Union[str, int],
+    param_b: Union[str, int],
+    assert_args: List[str],
+    assert_kwargs: List[str],
 ) -> None:
     logger.addHandler(log_store)
 
@@ -436,6 +449,18 @@ def test_function_concurrent(log_store: MockLoggingHandler, logger: Logger) -> N
     assert all(0.011 == pytest.approx(duration, abs=0.005) for duration in durations)
 
 
+class MyStaticMethodClass:
+    @staticmethod
+    @Timer(logger=logger.warning)
+    def my_static_method(a: str, b: str) -> str:
+        return a + b
+
+
+def test_static_method(log_store, logger) -> None:
+    logger.addHandler(log_store)
+    MyStaticMethodClass.my_static_method("a", "b")
+
+
 def test_timer_as_context_manager(log_store, logger) -> None:
     logger.addHandler(log_store)
 
@@ -477,11 +502,11 @@ class TestThreadContextLogger:
         "thread_context_logger_type", ["context_manager", "decorator"]
     )
     def test_thread_context_logger(
-            log_store: MockLoggingHandler,
-            logger: Logger,
-            thread_context_logger_type: str,
-            message: Any,
-            expected_message: Any,
+        log_store: MockLoggingHandler,
+        logger: Logger,
+        thread_context_logger_type: str,
+        message: Any,
+        expected_message: Any,
     ) -> None:
         logger.addHandler(log_store)
 
@@ -523,8 +548,8 @@ class TestThreadContextLogger:
 
     @staticmethod
     def test_thread_context_logger_in_multiple_threads(
-            log_store: MockLoggingHandler,
-            logger: Logger,
+        log_store: MockLoggingHandler,
+        logger: Logger,
     ) -> None:
         logger.addHandler(log_store)
 
