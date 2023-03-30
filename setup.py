@@ -29,6 +29,7 @@ setuptools.setup(
     author_email='info@ondewo.com',
     description='This library provides custom logging for python including error handling and timing.',
     long_description=long_description,
+    include_package_data=True,
     long_description_content_type='text/markdown',
     url='https://github.com/ondewo/ondewo-logging-python',
     packages=setuptools.find_packages(include=["ondewo*", ]),
