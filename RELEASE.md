@@ -1,6 +1,13 @@
 *****************
 
 # Release History
+*****************
+
+## Release ONDEWO LOGGING PYTHON 3.3.0
+
+### Bug Fixes
+
+* PyPi classification corrected License :: OSI Approved :: Apache Software License
 
 *****************
 
