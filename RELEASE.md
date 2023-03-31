@@ -3,7 +3,7 @@
 # Release History
 *****************
 
-## Release ONDEWO LOGGING PYTHON 3.3.0
+## Release ONDEWO LOGGING PYTHON 3.3.1
 
 ### Bug Fixes
 
