@@ -1,4 +1,4 @@
-# Copyright 2021 ONDEWO GmbH
+# Copyright 2021, 2022, 2023 ONDEWO GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -43,9 +43,7 @@ from ondewo.logging.constants import (
     START,
 )
 from ondewo.logging.filters import ThreadContextFilter
-from ondewo.logging.logger import (
-    logger_console,
-)
+from ondewo.logging.logger import logger_console
 
 TF = TypeVar("TF", bound=Callable[..., Any])
 
@@ -78,8 +76,12 @@ class Timer(ContextDecorator):
         def wrapper_timing(*args, **kwargs) -> Any:
             self.start(func)
 
+            value: Any
             try:
-                value: Any = func(*args, **kwargs)
+                if args and not isinstance(args[0], (type, type(None))):
+                    value = func(args[0], *args[1:], **kwargs)
+                else:
+                    value = func(*args, **kwargs)
             except Exception as exc:
                 trace = traceback.format_exc()
 

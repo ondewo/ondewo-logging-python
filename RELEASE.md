@@ -4,6 +4,14 @@
 
 *****************
 
+## Release ONDEWO LOGGING PYTHON 3.3.0
+
+### Improvements
+
+* Added support for decorator for static methods
+
+*****************
+
 ## Release ONDEWO LOGGING PYTHON 3.2.8
 
 ### Bug Fixes
