@@ -24,7 +24,7 @@ requires: List[str] = read_requirements('requirements.txt')
 
 setuptools.setup(
     name='ondewo-logging',
-    version='3.3.1',
+    version='3.3.2',
     author='Ondewo GmbH',
     author_email='info@ondewo.com',
     description='This library provides custom logging for python including error handling and timing.',
