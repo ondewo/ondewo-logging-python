@@ -78,8 +78,13 @@ class Timer(ContextDecorator):
 
             value: Any
             try:
+                if isinstance(func, staticmethod):
+                    value = func.__func__(*args, **kwargs)
                 if args and not isinstance(args[0], (type, type(None))):
-                    value = func(args[0], *args[1:], **kwargs)
+                    if isinstance(func, staticmethod):
+                        value = func.__func__(*args, **kwargs)
+                    else:
+                        value = func(args[0], *args[1:], **kwargs)
                 else:
                     value = func(*args, **kwargs)
             except Exception as exc:
@@ -160,10 +165,10 @@ class Timer(ContextDecorator):
         return elapsed_time
 
     def report(
-        self,
-        elapsed_time: float,
-        func_name: Optional[str] = None,
-        thread_id: Optional[int] = None,
+            self,
+            elapsed_time: float,
+            func_name: Optional[str] = None,
+            thread_id: Optional[int] = None,
     ) -> None:
         name: str = func_name or CONTEXT
 
@@ -268,11 +273,11 @@ def log_arguments(func: Callable) -> Callable:
 
 
 def log_exception(
-    exc_type: Any,
-    exc_val: Optional[str],
-    traceback_str: Optional[str],
-    function_name: str,
-    logger: Callable[[Union[str, Dict[str, Any]]], None] = logger_console.error,
+        exc_type: Any,
+        exc_val: Optional[str],
+        traceback_str: Optional[str],
+        function_name: str,
+        logger: Callable[[Union[str, Dict[str, Any]]], None] = logger_console.error,
 ) -> None:
     """
     Formats and logs an exception.
@@ -289,12 +294,12 @@ def log_exception(
 
 
 def log_args_kwargs_results(  # type: ignore
-    func: TF,
-    result: Any,
-    argument_max_length: int = -1,
-    logger: Optional[Callable[..., None]] = logger_console.warning,
-    *args,
-    **kwargs,
+        func: TF,
+        result: Any,
+        argument_max_length: int = -1,
+        logger: Optional[Callable[..., None]] = logger_console.warning,
+        *args,
+        **kwargs,
 ) -> None:
     def truncate_arg(arg_to_truncate: Any) -> str:
         arg_str: str = str(arg_to_truncate)
@@ -329,9 +334,9 @@ class ThreadContextLogger(ContextDecorator):
     """Add per-thread context information using a class, context manager or decorator."""
 
     def __init__(
-        self,
-        context_dict: Optional[Dict[str, Any]] = None,
-        logger: Optional[Logger] = None,
+            self,
+            context_dict: Optional[Dict[str, Any]] = None,
+            logger: Optional[Logger] = None,
     ) -> None:
         """
 

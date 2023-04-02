@@ -4,6 +4,14 @@
 
 *****************
 
+## Release ONDEWO LOGGING PYTHON 3.3.2
+
+### Bug Fixes
+
+* staticmethod in cython bug fix
+
+*****************
+
 ## Release ONDEWO LOGGING PYTHON 3.3.1
 
 ### Bug Fixes
