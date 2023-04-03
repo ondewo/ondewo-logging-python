@@ -4,6 +4,14 @@
 
 *****************
 
+## Release ONDEWO LOGGING PYTHON 3.3.3
+
+### Improvements
+
+* Use wrapt library for logging decorator for making logging more stable for static methods and class
+
+*****************
+
 ## Release ONDEWO LOGGING PYTHON 3.3.2
 
 ### Bug Fixes
