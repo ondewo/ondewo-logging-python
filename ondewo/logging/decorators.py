@@ -36,6 +36,8 @@ from typing import (
     Union,
 )
 
+import wrapt
+
 from ondewo.logging.constants import (
     CONTEXT,
     EXCEPTION,
@@ -62,71 +64,56 @@ class Timer(ContextDecorator):
     recurse_depths: Dict[int, float] = field(default_factory=lambda: defaultdict(float))
     argument_max_length: int = 10000
 
-    def __call__(self, func: TF) -> TF:
-        """Decorator which adds a logs timing information for the decorated function.
+    @wrapt.decorator
+    def __call__(self, wrapped: Any, instance: Optional[Any], args: Any, kwargs: Any):
+        self.start(wrapped, instance, args, kwargs)
 
-        Args
-            func: the function to be decorated
+        value: Any
+        try:
+            value = wrapped(*args, **kwargs)
+        except Exception as exc:
+            trace = traceback.format_exc()
+            function_name = getattr(wrapped, '__name__', "UNKNOWN_FUNCTION_NAME")
+            log_exception(type(exc), next(iter(exc.args), None), trace, function_name, self.logger)
 
-        Returns:
-            the decorator
-        """
+            if not self.suppress_exceptions:
+                self.stop(function_name)
+                raise
+            value = "An exception occurred!"
 
-        @functools.wraps(func)
-        def wrapper_timing(*args, **kwargs) -> Any:
-            self.start(func)
+        if self.log_arguments:
+            log_args_kwargs_results(wrapped, value, self.argument_max_length, self.logger, *args, **kwargs)
 
-            value: Any
-            try:
-                if isinstance(func, staticmethod):
-                    value = func.__func__(*args, **kwargs)
-                if args and not isinstance(args[0], (type, type(None))):
-                    if isinstance(func, staticmethod):
-                        value = func.__func__(*args, **kwargs)
-                    else:
-                        value = func(args[0], *args[1:], **kwargs)
-                else:
-                    value = func(*args, **kwargs)
-            except Exception as exc:
-                trace = traceback.format_exc()
+        self.stop(wrapped.__name__)
+        return value
 
-                function_name: str = "UNKNOWN_FUNCTION_NAME"
-                if hasattr(func, '__name__'):
-                    function_name = func.__name__
-                elif hasattr(func, '__str__'):
-                    function_name = func.__str__  # type: ignore
-                else:
-                    function_name = "UNKNOWN_FUNCTION_NAME"
-
-                log_exception(type(exc), next(iter(exc.args), None), trace, function_name, self.logger)  # type: ignore
-
-                if not self.suppress_exceptions:
-                    self.stop(function_name)
-                    raise
-                value = "An exception occurred!"
-
-            if self.log_arguments:
-                log_args_kwargs_results(
-                    func, value, self.argument_max_length, self.logger, *args, **kwargs
-                )
-
-            self.stop(func.__name__)
-            return value
-
-        return wrapper_timing  # type: ignore
-
-    def start(self, func: Optional[TF] = None) -> None:
+    def start(
+        self,
+        func: Optional[wrapt.FunctionWrapper] = None,
+        instance: Optional[Any] = None,
+        args: Optional[Any] = None,
+        kwargs: Optional[Any] = None
+    ) -> None:
         """Start a new timer"""
         thread_id: int = get_ident()
         if func:
-
             function_name: str = "UNKNOWN_FUNCTION_NAME"
-            if hasattr(func, '__name__'):
-                function_name = func.__name__
-            elif hasattr(func, '__str__'):
-                function_name = func.__str__  # type: ignore
+
+            if isinstance(func, wrapt.FunctionWrapper):
+                original_func = func.original
+                if hasattr(original_func, '__name__'):
+                    function_name = original_func.__name__
+                elif hasattr(original_func, '__str__'):
+                    function_name = str(original_func)
+                else:
+                    function_name = "UNKNOWN_FUNCTION_NAME"
             else:
-                function_name = "UNKNOWN_FUNCTION_NAME"
+                if hasattr(func, '__name__'):
+                    function_name = func.__name__
+                elif hasattr(func, '__str__'):
+                    function_name = str(func)
+                else:
+                    function_name = "UNKNOWN_FUNCTION_NAME"
 
             self.logger({"message": START.format(function_name, thread_id)})
 
@@ -138,7 +125,7 @@ class Timer(ContextDecorator):
         else:
             self._start_times[thread_id] = time.perf_counter()
 
-    def stop(self, func_name: Optional[str] = None) -> float:
+    def stop(self, func: Optional[wrapt.FunctionWrapper] = None) -> float:
         """Stop the timer, and report the elapsed time"""
         thread_id: int = get_ident()
 
@@ -158,23 +145,36 @@ class Timer(ContextDecorator):
 
         # Report elapsed time
         if self.logger:
-            self.report(
-                elapsed_time=elapsed_time, func_name=func_name, thread_id=thread_id
-            )
+            func_name = None
+            if func:
+                if isinstance(func, wrapt.FunctionWrapper):
+                    original_func = func.original
+                    if hasattr(original_func, '__name__'):
+                        func_name = original_func.__name__
+                    elif hasattr(original_func, '__str__'):
+                        func_name = str(original_func)
+                else:
+                    if hasattr(func, '__name__'):
+                        func_name = func.__name__
+                    elif hasattr(func, '__str__'):
+                        func_name = str(func)
+
+            self.report(elapsed_time=elapsed_time, func_name=func_name, thread_id=thread_id)
 
         return elapsed_time
 
     def report(
-            self,
-            elapsed_time: float,
-            func_name: Optional[str] = None,
-            thread_id: Optional[int] = None,
+        self,
+        elapsed_time: float,
+        func_name: Optional[str] = None,
+        thread_id: Optional[int] = None,
     ) -> None:
         name: str = func_name or CONTEXT
 
         try:
             message = self.message.format(elapsed_time, name, thread_id)
-        except IndexError:
+        except IndexError as index_error:
+            print(index_error)
             pass
 
         log: Dict[str, Any] = {
@@ -193,9 +193,7 @@ class Timer(ContextDecorator):
         """Stop the context manager timer"""
         self.stop()
         if exc_type:
-            log_exception(
-                exc_type, exc_val, traceback.format_exc(), CONTEXT, self.logger  # type: ignore
-            )
+            log_exception(exc_type, exc_val, traceback.format_exc(), CONTEXT, self.logger)  # type: ignore
         return self.suppress_exceptions
 
 
@@ -273,11 +271,11 @@ def log_arguments(func: Callable) -> Callable:
 
 
 def log_exception(
-        exc_type: Any,
-        exc_val: Optional[str],
-        traceback_str: Optional[str],
-        function_name: str,
-        logger: Callable[[Union[str, Dict[str, Any]]], None] = logger_console.error,
+    exc_type: Any,
+    exc_val: Optional[str],
+    traceback_str: Optional[str],
+    function_name: str,
+    logger: Callable[[Union[str, Dict[str, Any]]], None] = logger_console.error,
 ) -> None:
     """
     Formats and logs an exception.
@@ -294,12 +292,12 @@ def log_exception(
 
 
 def log_args_kwargs_results(  # type: ignore
-        func: TF,
-        result: Any,
-        argument_max_length: int = -1,
-        logger: Optional[Callable[..., None]] = logger_console.warning,
-        *args,
-        **kwargs,
+    func: TF,
+    result: Any,
+    argument_max_length: int = -1,
+    logger: Optional[Callable[..., None]] = logger_console.warning,
+    *args,
+    **kwargs,
 ) -> None:
     def truncate_arg(arg_to_truncate: Any) -> str:
         arg_str: str = str(arg_to_truncate)
@@ -334,9 +332,9 @@ class ThreadContextLogger(ContextDecorator):
     """Add per-thread context information using a class, context manager or decorator."""
 
     def __init__(
-            self,
-            context_dict: Optional[Dict[str, Any]] = None,
-            logger: Optional[Logger] = None,
+        self,
+        context_dict: Optional[Dict[str, Any]] = None,
+        logger: Optional[Logger] = None,
     ) -> None:
         """
 
