@@ -14,7 +14,10 @@
 
 import json
 import logging
-from typing import Any, Dict
+from typing import (
+    Any,
+    Dict,
+)
 
 import pytest
 
@@ -31,8 +34,8 @@ from ondewo.logging.logger import (
 class _Resources:
     test_grpc_request: Dict[str, Any] = {
         "message": "Got request (type <class 'ondewo.nlu.user_pb2.TestRequest'>): {\"userEmail\": "
-        '"asd@asd.hu", "password": "asa", "stop_phrases_config": {"stop_phrase_files": '
-        '{"nested": "test"}, "remove_punctuation": false, "active": false}}',
+                   '"asd@asd.hu", "password": "asa", "stop_phrases_config": {"stop_phrase_files": '
+                   '{"nested": "test"}, "remove_punctuation": false, "active": false}}',
         "tags": ["test"],
     }
     json_input: Dict[str, Any] = {

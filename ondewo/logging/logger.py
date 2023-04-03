@@ -17,7 +17,12 @@ import logging.config
 import os
 import re
 import sys
-from typing import Any, Dict, Optional, Tuple
+from typing import (
+    Any,
+    Dict,
+    Optional,
+    Tuple,
+)
 
 import yaml
 from dotenv import load_dotenv
@@ -128,7 +133,10 @@ def import_config() -> Dict[str, Any]:
 
 
 def set_module_name(
-        module_name: str, git_repo_name: str, docker_image_name: str, conf: Dict[str, Any]
+    module_name: str,
+    git_repo_name: str,
+    docker_image_name: str,
+    conf: Dict[str, Any]
 ) -> Dict[str, Any]:
     """
     Sets the module name as given in the env on deployment.

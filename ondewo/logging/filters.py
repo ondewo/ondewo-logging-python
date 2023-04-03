@@ -1,14 +1,21 @@
 from copy import deepcopy
-from logging import Filter, LogRecord
+from logging import (
+    Filter,
+    LogRecord,
+)
 from threading import get_ident
-from typing import Any, Dict, Optional
+from typing import (
+    Any,
+    Dict,
+    Optional,
+)
 
 
 class ThreadContextFilter(Filter):
     """This filter adds a dictionary with context info to each log record logged in the current thread."""
 
     def __init__(
-            self, name: str = "", context_dict: Optional[Dict[str, Any]] = None
+        self, name: str = "", context_dict: Optional[Dict[str, Any]] = None
     ) -> None:
         """
 
