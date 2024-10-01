@@ -17,7 +17,7 @@ repos:
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.11.2
     hooks:
-      - id: mypy  # Run mypy type checker; note: runs with flag --missing-imports
+      - id: mypy  # Run mypy type checker; info: runs with flag --missing-imports
         args: [ --config-file=mypy.ini ]
         # Use language: system to run Mypy git repo's existing virtual environment
         # instead of mypy's own virtual environment. Necessary to find types-.* packages
