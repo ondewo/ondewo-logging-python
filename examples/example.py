@@ -31,7 +31,7 @@ class MyClass():
         log.warning(f"My warning message {my_variable_float}")
         log.info("My info message")
 
-        with Timer(message='Timing: Elapsed time: {:0.3f}:', logger=log.debug):
+        with Timer(message="Timing: Elapsed time: {:0.3f}:", logger=log.debug):
             for i in range(0, 3):
                 log.debug("This is my debug message output from within Timer")
                 sleep(1)
@@ -57,7 +57,7 @@ class MyClass():
         log.debug(f"My debug message {my_variable_str}")
         log.warning(f"My warning message {my_variable_float}")
 
-        with Timer(message='Timing: Elapsed time: {:0.3f}:', logger=log.debug):
+        with Timer(message="Timing: Elapsed time: {:0.3f}:", logger=log.debug):
             for i in range(0, 3):
                 log.debug("This is my debug message output from within Timer")
                 sleep(1)
@@ -66,7 +66,7 @@ class MyClass():
     @staticmethod
     @Timer(
         logger=log.debug, log_arguments=True,
-        message='MyClass: my_static_method_with_long_method_name: Elapsed time: {:0.3f}',
+        message="MyClass: my_static_method_with_long_method_name: Elapsed time: {:0.3f}",
     )
     def my_static_method_with_long_method_name(
         my_variable_str: str,
@@ -75,13 +75,13 @@ class MyClass():
         log.debug(f"My debug message {my_variable_str}")
         log.warning(f"My warning message {my_variable_float}")
 
-        with Timer(message='Timing: Elapsed time: {:0.3f}:', logger=log.debug):
+        with Timer(message="Timing: Elapsed time: {:0.3f}:", logger=log.debug):
             for i in range(0, 3):
                 log.debug("This is my debug message output from within Timer")
                 sleep(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     # instance method
     my_class: MyClass = MyClass()
