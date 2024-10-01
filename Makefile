@@ -27,11 +27,6 @@ run_tests: ## Start a server then a little docker image to run the e2e tests in
 
 export
 
-delete_pycache: clean_pycache
-remove_pycache: clean_pycache
-clean_pycache:
-	rm -rf .pytest_cache
-	find . -name '__pycache__' -exec rm -r {} +
 
 # PR BEFORE RELEASE
 # 1 - Update Version Number
@@ -101,6 +96,15 @@ help: ## Print usage info about help targets
 
 makefile_chapters: ## Shows all sections of Makefile
 	@echo `cat Makefile| grep "########################################################" -A 1 | grep -v "########################################################"`
+
+show_version: ## Show version
+	@echo Version is '$(ONDEWO_LOGGING_VERSION)'
+
+delete_pycache: clean_pycache
+remove_pycache: clean_pycache
+clean_pycache:
+	rm -rf .pytest_cache
+	find . -name '__pycache__' -exec rm -r {} +
 
 # BEFORE "release"
 update_setup: ## Update Logging Version in setup.py
