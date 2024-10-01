@@ -1,4 +1,4 @@
-# Copyright 2021 ONDEWO GmbH
+# Copyright 2021-2024 ONDEWO GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import re
 from logging import Logger
 from multiprocessing.pool import ThreadPool
@@ -46,6 +47,7 @@ from tests.conftest import MockLoggingHandler
 
 
 def test_timer_simple_warning(log_store, logger):
+
     @Timer(logger=logger.warning)
     def timer_function():
         sleep(0.01)
@@ -56,6 +58,7 @@ def test_timer_simple_warning(log_store, logger):
 
 
 def test_timer(log_store, logger):
+
     @Timer(logger=logger.warning)
     def timer_function():
         sleep(0.01)
@@ -253,6 +256,7 @@ def test_exception_handling(log_store, logger):
 
 
 def test_timer_depth(log_store, logger):
+
     @Timer(logger=logger.warning)
     def timer_function(depth=0):
         sleep(0.01)
@@ -585,11 +589,7 @@ class TestThreadContextLogger:
 
 class TestStaticMethodsAndClass:
     my_class_var: str = "my_class_var"
-
-    @Timer()
-    def __init__(self) -> None:
-        # sleep(2)
-        self.result = "Done"
+    result: str = "Done"
 
     @classmethod
     @Timer()
@@ -599,54 +599,54 @@ class TestStaticMethodsAndClass:
 
     @staticmethod
     @Timer()
-    def static_method(duration: float) -> Any:
+    def static_method(duration: float) -> str:
         sleep(duration)
         return "Done"
 
     # @Timer()
     @staticmethod
     @Timer(logger=logger.warning, log_arguments=True, message='static_method_3: Elapsed time: {}')
-    def static_method_3(duration: float) -> Any:
+    def static_method_3(duration: float) -> str:
         sleep(duration)
         return "Done"
 
     @staticmethod
     @Timer(logger=logger.info, log_arguments=True, message='static_method_recursion_0: Elapsed time: {}')
-    def static_method_recursion_0(duration: float):
+    def static_method_recursion_0(duration: float) -> str:
         sleep(duration)
-        return TestStaticMethodsAndClass.static_method_recursion_1(duration)
+        return TestStaticMethodsAndClass.static_method_recursion_1(duration)  # type: ignore
 
     @staticmethod
     @Timer(logger=logger.error, log_arguments=False, message='static_method_recursion_1: Elapsed time: {}')
-    def static_method_recursion_1(duration: float):
+    def static_method_recursion_1(duration: float) -> str:
         sleep(duration)
-        return TestStaticMethodsAndClass.static_method_recursion_2(duration)
+        return TestStaticMethodsAndClass.static_method_recursion_2(duration)  # type: ignore
 
     @staticmethod
     @Timer(logger=logger.debug, log_arguments=True, message='static_method_recursion_2: Elapsed time: {}')
-    def static_method_recursion_2(duration: float):
+    def static_method_recursion_2(duration: float) -> str:
         sleep(duration)
-        return TestStaticMethodsAndClass.static_method_recursion_3(duration)
+        return TestStaticMethodsAndClass.static_method_recursion_3(duration)  # type: ignore
 
     @staticmethod
     @Timer(logger=logger.debug, log_arguments=True, message='static_method_recursion_3: Elapsed time: {}')
-    def static_method_recursion_3(duration: float):
+    def static_method_recursion_3(duration: float) -> str:
         sleep(duration)
-        return TestStaticMethodsAndClass.static_method_recursion_4(duration)
+        return TestStaticMethodsAndClass.static_method_recursion_4(duration)  # type: ignore
 
     @staticmethod
     @Timer(logger=logger.debug, log_arguments=True, message='static_method_recursion_4: Elapsed time: {}')
-    def static_method_recursion_4(duration: float):
+    def static_method_recursion_4(duration: float) -> str:
         sleep(duration)
         return "Done"
 
 
-def test_static_method_2():
+def test_static_method_2() -> None:
     result = TestStaticMethodsAndClass.static_method(0.5)
     assert result == "Done"
 
 
-def test_static_method_recursion_0_times(log_store, logger):
+def test_static_method_recursion_0_times(log_store, logger) -> None:
     logger.addHandler(log_store)
     assert log_store.is_empty()
     result = TestStaticMethodsAndClass.static_method_recursion_4(0.5)
@@ -654,7 +654,7 @@ def test_static_method_recursion_0_times(log_store, logger):
     assert result == "Done"
 
 
-def test_static_method_recursion_4_times(log_store, logger):
+def test_static_method_recursion_4_times(log_store, logger) -> None:
     logger.addHandler(log_store)
     assert log_store.is_empty()
     result = TestStaticMethodsAndClass.static_method_recursion_0(0.5)
@@ -662,17 +662,17 @@ def test_static_method_recursion_4_times(log_store, logger):
     assert result == "Done"
 
 
-def test_init_function():
+def test_init_function() -> None:
     c: TestStaticMethodsAndClass = TestStaticMethodsAndClass()
     assert isinstance(c, TestStaticMethodsAndClass)
 
 
-def test_class_method():
+def test_class_method() -> None:
     result = TestStaticMethodsAndClass().class_method(2)
     assert result == "Done"
 
 
-def test_static_method_3(log_store, logger):
+def test_static_method_3(log_store, logger) -> None:
     logger.addHandler(log_store)
     assert log_store.is_empty()
     assert not log_store.count_levels("warning")
@@ -680,7 +680,7 @@ def test_static_method_3(log_store, logger):
     assert result == "Done"
 
 
-def test_logging(logger, log_store):
+def test_logging(logger, log_store) -> None:
     logger.addHandler(log_store)
     logger.debug('Debug message')
     logger.info('Info message')

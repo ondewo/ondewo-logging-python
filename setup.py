@@ -3,6 +3,8 @@ from typing import List
 
 import setuptools
 
+from ondewo.logging.version import __version__
+
 
 def read_file(file_path: str, encoding: str = 'utf-8') -> str:
     with open(file_path, 'r', encoding=encoding) as f:
@@ -24,10 +26,10 @@ requires: List[str] = read_requirements('requirements.txt')
 
 setuptools.setup(
     name='ondewo-logging',
-    version='3.3.3',
-    author='Ondewo GmbH',
-    author_email='info@ondewo.com',
-    description='This library provides custom logging for python including error handling and timing.',
+    version=f"{__version__}",
+    author="Ondewo GmbH",
+    author_email="office@ondewo.com",
+    description='ONDEWO logging library provides custom logging for python including error handling and timing.',
     long_description=long_description,
     include_package_data=True,
     long_description_content_type='text/markdown',
@@ -43,6 +45,7 @@ setuptools.setup(
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
         'Operating System :: OS Independent',
     ],
     python_requires='>=3.8',

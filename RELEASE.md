@@ -4,6 +4,15 @@
 
 *****************
 
+## Release ONDEWO LOGGING PYTHON 3.4.0
+
+### Improvements
+
+* Updated libraries and automation scripts
+* Python 3.12 support
+
+*****************
+
 ## Release ONDEWO LOGGING PYTHON 3.3.3
 
 ### Improvements

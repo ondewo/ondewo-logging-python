@@ -1,4 +1,4 @@
-# Copyright 2021 ONDEWO GmbH
+# Copyright 2021-2024 ONDEWO GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ from typing import (
 import yaml
 from dotenv import load_dotenv
 
-import ondewo.logging.__init__ as file_anchor  # type:ignore
+import ondewo.logging.constants as file_anchor  # type:ignore
 
 load_dotenv()
 MODULE_NAME: str = os.getenv("MODULE_NAME", "")

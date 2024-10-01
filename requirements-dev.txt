@@ -1,19 +1,10 @@
-coverage>=6.4
-flake8==6.0.0
-jupyter
-mypy==0.971
-pre-commit
-pytest-cov>=3.0.0
-pytest-timeout>=2.1.0
-pytest-xdist>=2.5.0
-pytest>=7.1.2
-tqdm
+-r requirements-static-code-checks.txt
 
-#mypy types
-types-python-dateutil
-types-pytz
-types-requests
-types-mock
-types-setuptools
-types-toml
-types-PyYAML
+coverage>=6.4
+jupyter
+pre-commit
+pytest-cov>=5.0.0
+pytest-timeout>=2.3.1
+pytest-xdist>=3.6.1
+pytest>=8.3.3
+tqdm

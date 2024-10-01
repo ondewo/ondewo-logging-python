@@ -1,4 +1,4 @@
-# Copyright 2021, 2022, 2023 ONDEWO GmbH
+# Copyright 2021-2024 ONDEWO GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -65,7 +65,7 @@ class Timer(ContextDecorator):
     argument_max_length: int = 10000
 
     @wrapt.decorator
-    def __call__(self, wrapped: Any, instance: Optional[Any], args: Any, kwargs: Any):
+    def __call__(self, wrapped: Any, instance: Optional[Any], args: Any, kwargs: Any) -> Any:
         self.start(wrapped, instance, args, kwargs)
 
         value: Any
@@ -144,7 +144,7 @@ class Timer(ContextDecorator):
             elapsed_time = 0.0
 
         # Report elapsed time
-        if self.logger:
+        if self.logger:  # type: ignore
             func_name = None
             if func:
                 if isinstance(func, wrapt.FunctionWrapper):
@@ -349,6 +349,6 @@ class ThreadContextLogger(ContextDecorator):
         """Add the filter to the logger when entering the context."""
         self.logger.addFilter(self.filter)
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Remove the filter from the logger when leaving the context."""
         self.logger.removeFilter(self.filter)

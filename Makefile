@@ -1,3 +1,17 @@
+# Copyright 2021-2024 ONDEWO GmbH
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 PACKAGE_FOLDER := ondewo-logging-python
 TESTFILE := ondewo
 CODE_CHECK_IMAGE := code_check_image_${TESTFILE}
@@ -13,6 +27,12 @@ run_tests: ## Start a server then a little docker image to run the e2e tests in
 
 export
 
+delete_pycache: clean_pycache
+remove_pycache: clean_pycache
+clean_pycache:
+	rm -rf .pytest_cache
+	find . -name '__pycache__' -exec rm -r {} +
+
 # PR BEFORE RELEASE
 # 1 - Update Version Number
 # 2 - Update RELEASE.md
@@ -27,8 +47,7 @@ export
 
 # MUST BE THE SAME AS API in Mayor and Minor Version Number
 # example: API 2.9.0 --> Client 2.9.X
-ONDEWO_LOGGING_VERSION=3.3.3
-
+ONDEWO_LOGGING_VERSION=$(shell cat ondewo/logging//version.py | sed "s:__version__ = '::"  | sed "s:'::")
 
 PYPI_USERNAME?=ENTER_HERE_YOUR_PYPI_USERNAME
 PYPI_PASSWORD?=ENTER_HERE_YOUR_PYPI_PASSWORD
@@ -136,7 +155,6 @@ show_pypi_via_docker_image: build_utils_docker_image ## Push source code to pypi
 		-e PYPI_PASSWORD=${PYPI_PASSWORD} \
 		${IMAGE_UTILS_NAME} make show_pypi
 	rm -rf dist
-
 
 push_to_pypi: build_package upload_package clear_package_data
 	@echo 'YAY - Pushed to pypi : )'

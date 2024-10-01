@@ -1,4 +1,4 @@
-# Copyright 2021 ONDEWO GmbH
+# Copyright 2021-2024 ONDEWO GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ from ondewo.logging.logger import (
     logger_debug,
     logger_root,
 )
+from tests.conftest import MockLoggingHandler
 
 
 class _Resources:
@@ -201,10 +202,11 @@ class TestLogger:
         assert CONSOLE_TEXT in log_store.messages["info"]
 
     @staticmethod
-    def test_cai_grpc_converter(logger, log_store):
+    def test_cai_grpc_converter(logger: logging.Logger, log_store: MockLoggingHandler):
         condition_one: str = "'stop_phrases_config|stop_phrase_files': '<TRUNCATED!>'"
         condition_two: str = "'stop_phrases_config|stop_phrase_files|nested': 'test'"
         logger.addHandler(log_store)
+        assert hasattr(logger, "grpc")
         logger.grpc({"message": "Test log", "tags": ["test_tag"]})
         for log in log_store.messages["grpc"]:
             assert "{'message': 'Test log', 'tags': ['test_tag']}" in log

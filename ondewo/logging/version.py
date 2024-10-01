@@ -12,18 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM python:3.12-slim
-
-WORKDIR /home/ondewo
-
-COPY requirements.txt .
-RUN \
-      pip3 install -U pip && \
-      pip3 install pytest && \
-      pip3 install -r requirements.txt
-
-ARG TESTFILE
-COPY $TESTFILE $TESTFILE
-COPY tests tests
-
-CMD python3 -m pytest -vv --capture=no --junit-xml=log/"$RESULTS" "tests"
+__version__ = '3.4.0'
