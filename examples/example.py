@@ -21,7 +21,7 @@ from ondewo.logging.logger import logger_console as log
 class MyClass():
 
     # instance method
-    @Timer(logger=log.debug, log_arguments=False, message='MyClass: my_method: Elapsed time: {:0.3f}')
+    @Timer(logger=log.debug, log_arguments=False, message="MyClass: my_method: Elapsed time: {:0.3f}")
     def my_method(
         self,
         my_variable_str: str,
@@ -47,7 +47,7 @@ class MyClass():
     @classmethod
     @Timer(
         logger=log.debug, log_arguments=False,
-        message='MyClass: my_class_method: Elapsed time: {:0.3f}',
+        message="MyClass: my_class_method: Elapsed time: {:0.3f}",
     )
     def my_class_method(
         cls,
