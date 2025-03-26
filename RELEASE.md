@@ -4,6 +4,14 @@
 
 *****************
 
+## Release ONDEWO LOGGING PYTHON 3.5.0
+
+### Improvements
+
+* Added AsyncTimer and async logger #21
+
+*****************
+
 ## Release ONDEWO LOGGING PYTHON 3.4.0
 
 ### Improvements
