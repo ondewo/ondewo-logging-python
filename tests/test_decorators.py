@@ -21,6 +21,7 @@ from threading import (
     Thread,
     get_ident,
 )
+from ondewo.logging.async_logger import logger_console as log
 from time import sleep
 from typing import (
     Any,
@@ -961,3 +962,17 @@ async def test_async_log_args_kwargs_results_exception() -> None:
     assert log_store[1]["function"] == "failing_async_function"
     assert log_store[1]["exception_type"] == "ValueError"
     assert log_store[1]["exception"] == "Value cannot be negative"
+
+
+@pytest.mark.asyncio
+async def test_async_log_simple() -> None:
+    """Tests the AsyncTimer decorator with a simple asynchronous function."""
+
+    @AsyncTimer(logger=log.debug, log_arguments=True, message="Test Elapsed: {:0.5f}")
+    async def my_test_function(val: int) -> int:
+        await asyncio.sleep(0.01)  # Simulate some work
+        print(f"Test value: {val}")
+        return val * 2
+
+    result = await my_test_function(5)
+    assert result == 10

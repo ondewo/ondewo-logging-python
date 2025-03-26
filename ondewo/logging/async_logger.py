@@ -4,11 +4,18 @@ import logging.config
 import os
 import sys
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import (
+    Any,
+    Dict,
+    Optional,
+    Tuple,
+)
 
 import aiofiles
 import yaml
 from dotenv import load_dotenv
+
+from ondewo.logging.decorators import AsyncTimer
 
 load_dotenv()
 MODULE_NAME: str = os.getenv("MODULE_NAME", "")
@@ -116,10 +123,29 @@ async def create_logs(conf: Optional[Dict[str, Any]] = None) -> Tuple[logging.Lo
     return logger_root, logger_console, logger_debug
 
 
+def sync_create_logs():
+    try:
+        return asyncio.run(create_logs())
+    except RuntimeError:
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(create_logs())
+
+
+logger_root, logger_console, logger_debug = sync_create_logs()
+
+
 # Example usage
 async def main():
     logger_root, logger_console, logger_debug = await create_logs()
     logger_console.info("Asynchronous logging system initialized.")
+
+    @AsyncTimer(logger=logger_console.debug, log_arguments=False, message="Test Elapsed: {:0.3f}")
+    async def my_test_function(val: int) -> int:
+        await asyncio.sleep(0.01)  # Simulate some work
+        logger_console.info(f"Test value: {val}")
+        return val * 2
+
+    await my_test_function(5)
 
 
 if __name__ == "__main__":
