@@ -11,8 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import functools
+import inspect
+import json
 import time
 import traceback
 import uuid
@@ -22,6 +23,8 @@ from dataclasses import (
     dataclass,
     field,
 )
+from functools import wraps
+from inspect import iscoroutinefunction
 from logging import (
     Filter,
     Logger,
@@ -30,6 +33,7 @@ from threading import get_ident
 from typing import (
     Any,
     Callable,
+    Coroutine,
     Dict,
     Optional,
     TypeVar,
@@ -352,3 +356,308 @@ class ThreadContextLogger(ContextDecorator):
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Remove the filter from the logger when leaving the context."""
         self.logger.removeFilter(self.filter)
+
+
+def async_log_exception(logger: Callable[[Dict[str, Any]], Coroutine[Any, Any, None]]):
+    """
+    An asynchronous decorator to log exceptions raised by an async function.
+
+    Args:
+        logger: An async function to handle the log record.
+    """
+
+    def decorator(func: Callable[..., Coroutine[Any, Any, Any]]):
+        @wraps(func)
+        async def wrapper(*args: Any, **kwargs: Any) -> Any:
+            try:
+                return await func(*args, **kwargs)
+            except Exception as e:
+                exc_type = type(e)
+                exc_val = e
+                tb = traceback.extract_tb(e.__traceback__)
+                traceback_str = "".join(traceback.format_list(tb))
+                function_name = func.__name__
+                log_data = {
+                    "tags": ["exception"],
+                    "message": str(exc_val),
+                    "traceback": traceback_str,
+                    "function": function_name,
+                    "exception_type": exc_type.__name__,
+                    "log_type": "exception",
+                }
+                await logger(log_data)
+                raise  # Re-raise the exception after logging
+
+        return wrapper
+
+    return decorator
+
+
+def async_log_args_kwargs_results(
+    logger: Callable[[Dict[str, Any]], Coroutine[Any, Any, None]],
+    argument_max_length: int = 50,
+):
+    """
+    An asynchronous decorator to log arguments, keyword arguments, and the result
+    of an async function.
+
+    Args:
+        logger: An async function that accepts a dictionary containing
+                the log information.
+        argument_max_length: The maximum length to represent arguments as strings.
+    """
+
+    def decorator(func: Callable[..., Coroutine[Any, Any, Any]]):
+        @wraps(func)
+        async def wrapper(*args: Any, **kwargs: Any) -> Any:
+            signature = inspect.signature(func)
+            bound_arguments = signature.bind(*args, **kwargs)
+            bound_arguments.apply_defaults()
+
+            formatted_args = {
+                name: repr(value)[:argument_max_length]
+                for name, value in bound_arguments.arguments.items()
+            }
+            formatted_kwargs = {
+                name: repr(value)[:argument_max_length] for name, value in kwargs.items()
+            }
+
+            log_data_before = {
+                "message": f"Function called: {func.__name__} with args={json.dumps(formatted_args)}, kwargs={json.dumps(formatted_kwargs)}",
+                "function": func.__name__,
+                "args": formatted_args,
+                "kwargs": formatted_kwargs,
+                "log_type": "call",
+            }
+            await logger(log_data_before)
+
+            try:
+                result = await func(*args, **kwargs)
+                formatted_result = repr(result)[:argument_max_length]
+                log_data_after = {
+                    "message": f"Function returned: {func.__name__} -> {formatted_result}",
+                    "function": func.__name__,
+                    "result": formatted_result,
+                    "log_type": "return",
+                }
+                await logger(log_data_after)
+                return result
+            except Exception as e:
+                exc_type = type(e)
+                exc_val = str(e)
+                log_data_exception = {
+                    "message": f"Exception in {func.__name__}: {exc_type.__name__} - {exc_val}",
+                    "function": func.__name__,
+                    "exception_type": exc_type.__name__,
+                    "exception": exc_val,
+                    "log_type": "exception",
+                }
+                await logger(log_data_exception)
+                raise  # Re-raise the exception
+
+        return wrapper
+
+    return decorator
+
+
+def async_exception_handling(
+    func: Callable[..., Coroutine[Any, Any, None]]
+) -> Callable[..., Coroutine[Any, Any, None]]:
+
+    def sync_wrapper(*args: Any, **kwargs: Any) -> Coroutine[Any, Any, Any]:
+        async def async_wrapper(*inner_args: Any, **inner_kwargs: Any) -> Any:
+            try:
+                return await func(*inner_args, **inner_kwargs)
+            except Exception as e:
+                # In a real scenario, you would likely use a proper logging mechanism
+                print(f"Caught exception in {func.__name__}: {e}")
+                # Here, we'll simulate logging by returning a dictionary
+                return {"tags": ["exception"], "message": str(e)}
+
+        return async_wrapper(*args, **kwargs)
+
+    return sync_wrapper
+
+
+def async_log_arguments(logger_func: Callable[[Dict[str, Any]], Coroutine[Any, Any, None]]):
+    """
+    An asynchronous decorator to log the arguments of an async function.
+
+    Args:
+        logger_func: An async function that accepts a dictionary containing
+                     the log information.
+    """
+
+    def decorator(func: Callable[..., Coroutine[Any, Any, Any]]):
+        @wraps(func)
+        async def wrapper(*args: Any, **kwargs: Any) -> Any:
+            signature = inspect.signature(func)
+            bound_arguments = signature.bind(*args, **kwargs)
+            bound_arguments.apply_defaults()
+            arguments_log = {name: str(value) for name, value in bound_arguments.arguments.items()}
+            log_data = {
+                "message": f"Function arguments: {json.dumps({'function': func.__name__, 'args': arguments_log, 'kwargs': kwargs})}",
+                "function": func.__name__,
+                "args": arguments_log,
+                "kwargs": kwargs,
+                "log_type": "arguments",
+            }
+            await logger_func(log_data)
+            return await func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+@dataclass
+class AsyncTimer:
+    """Time your async code using a class, context manager, or decorator"""
+
+    name: str = field(default_factory=lambda: str(uuid.uuid4()))
+    message: str = FINISH
+    logger: Union[Logger, Callable[[Dict[str, Any]], Union[None, Coroutine[Any, Any, None]]]] = field(
+        default=logger_console
+    )
+    _start_times: Dict[int, float] = field(default_factory=dict, init=False, repr=False)
+    log_arguments: bool = True
+    suppress_exceptions: bool = False
+    recursive: bool = False
+    recurse_depths: Dict[int, float] = field(default_factory=lambda: defaultdict(float))
+    argument_max_length: int = 10000
+
+    def __post_init__(self) -> None:
+        """Ensure logger is callable."""
+        if not callable(self.logger):
+            raise ValueError("Logger must be a callable function.")
+
+    def __call__(self, func: Callable[..., Coroutine[Any, Any, Any]]) -> Callable[..., Coroutine[Any, Any, Any]]:
+        @wraps(func)
+        async def wrapper(*args: Any, **kwargs: Any) -> Any:
+            start_time = time.perf_counter()
+            thread_id: int = get_ident()
+            function_name = func.__name__
+
+            await self._log_async({"message": START.format(function_name, thread_id)})
+
+            if thread_id in self._start_times and self.recursive:
+                self.recurse_depths[thread_id] += 1
+                await self._log_async(
+                    {"message": f"Recursing in {function_name}, depth = {self.recurse_depths[thread_id]}"}
+                )
+
+            self._start_times[thread_id] = start_time
+
+            value: Any
+            try:
+                value = await func(*args, **kwargs)
+            except Exception as exc:
+                trace = traceback.format_exc()
+                await self._log_async({"message": f"Exception in {function_name}: {trace}", "tags": ["exception"]})
+                if not self.suppress_exceptions:
+                    elapsed_time = time.perf_counter() - self._start_times.pop(thread_id, time.perf_counter())
+                    await self.report(elapsed_time=elapsed_time, func_name=function_name, thread_id=thread_id)
+                    raise
+                value = f"An exception occurred! {exc}"
+
+            if self.log_arguments:
+                arg_reprs = [repr(arg)[:self.argument_max_length] for arg in args]
+                kwarg_reprs = {k: repr(v)[:self.argument_max_length] for k, v in kwargs.items()}
+                await self._log_async(
+                    {
+                        "message": f"Function {function_name} executed.",
+                        "args": arg_reprs,
+                        "kwargs": kwarg_reprs,
+                        "result": repr(value)[:self.argument_max_length]
+                    }
+                )
+
+            elapsed_time = time.perf_counter() - self._start_times.pop(thread_id, time.perf_counter())
+            await self.report(elapsed_time=elapsed_time, func_name=function_name, thread_id=thread_id)
+            return value
+
+        return wrapper
+
+    async def __aenter__(self) -> "AsyncTimer":
+        self._context_start_time = time.perf_counter()
+        thread_id: int = get_ident()
+        await self._log_async({"message": START.format(self.name, thread_id)})
+        return self
+
+    async def __aexit__(
+        self, exc_type: Optional[type[BaseException]], exc_val: Optional[BaseException],
+        exc_tb: Optional[traceback.TracebackException]
+    ) -> None:
+        elapsed_time = time.perf_counter() - self._context_start_time
+        thread_id: int = get_ident()
+        await self.report(elapsed_time=elapsed_time, func_name=self.name, thread_id=thread_id)
+        if exc_type and not self.suppress_exceptions:
+            raise
+
+    async def start(
+        self,
+        func: Optional[Callable[..., Any]] = None,
+        instance: Optional[Any] = None,
+        args: Optional[Any] = None,
+        kwargs: Optional[Any] = None
+    ) -> None:
+        """Start a new timer"""
+        thread_id: int = get_ident()
+        function_name = self._get_function_name(func)
+
+        await self._log_async({"message": START.format(function_name, thread_id)})
+
+        if thread_id in self._start_times:
+            if self.recursive:
+                self.recurse_depths[thread_id] += 1
+                await self._log_async({"message": f"Recursing, depth = {self.recurse_depths[thread_id]}"})
+                return
+        else:
+            self._start_times[thread_id] = time.perf_counter()
+
+    async def stop(self, func: Optional[Callable[..., Any]] = None) -> float:
+        """Stop the timer, and report the elapsed time"""
+        thread_id: int = get_ident()
+
+        if self.recurse_depths[thread_id]:
+            self.recurse_depths[thread_id] -= 1
+            if self.recursive:
+                return 0.0
+
+        # Calculate elapsed time
+        elapsed_time = time.perf_counter() - self._start_times.pop(thread_id, time.perf_counter())
+
+        # Report elapsed time
+        func_name = self._get_function_name(func)
+        await self.report(elapsed_time=elapsed_time, func_name=func_name, thread_id=thread_id)
+
+        return elapsed_time
+
+    async def report(
+        self,
+        elapsed_time: float,
+        func_name: Optional[str] = None,
+        thread_id: Optional[int] = None,
+    ) -> None:
+        name: str = func_name or CONTEXT
+
+        message = self.message.format(elapsed_time, name, thread_id)
+        log: Dict[str, Any] = {
+            "message": message,
+            "duration": elapsed_time,
+            "tags": ["timing"],
+        }
+        await self._log_async(log)
+
+    async def _log_async(self, log: Dict[str, Any]) -> None:
+        """Helper function to log synchronously or asynchronously"""
+        if iscoroutinefunction(self.logger):
+            await self.logger(log)  # Async logger
+        else:
+            self.logger(log)  # type:ignore # Sync logger
+
+    def _get_function_name(self, func: Optional[Callable[..., Any]]) -> str:
+        """Helper function to get the function name safely"""
+        if func is None:
+            return "UNKNOWN_FUNCTION_NAME"
+        return getattr(func, '__name__', str(func))

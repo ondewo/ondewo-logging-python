@@ -1,3 +1,5 @@
+aiofiles
+asyncio
 fluent-logger>=0.10.0
 msgpack
 python_dotenv>=0.10.1
