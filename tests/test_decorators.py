@@ -21,7 +21,6 @@ from threading import (
     Thread,
     get_ident,
 )
-from ondewo.logging.async_logger import logger_console as log
 from time import sleep
 from typing import (
     Any,
@@ -35,6 +34,7 @@ from typing import (
 
 import pytest
 
+from ondewo.logging.async_logger import logger_console as log
 from ondewo.logging.constants import CONTEXT
 from ondewo.logging.decorators import (
     AsyncTimer,
