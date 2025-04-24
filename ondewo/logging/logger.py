@@ -113,23 +113,28 @@ class CustomLogger(logging.Logger):
                 )
 
 
-def import_config() -> Dict[str, Any]:
+def import_config(use_packaged: bool = False) -> Dict[str, Any]:
     """
     Imports the config from the yaml file. The yaml file is taken relative to this file, so nothing about the python path is assumed.
 
     :param:
     :return:    logging config as a dictionary
     """
-    if os.path.exists("/home/ondewo/logging.yaml"):
-        config_path: str = "/home/ondewo/logging.yaml"
+    config_path: str
+    ondewo_logging_config_file: str = os.getenv("ONDEWO_LOGGING_CONFIG_FILE", "")
+    if ondewo_logging_config_file and os.path.exists(ondewo_logging_config_file) and not use_packaged:
+        config_path = ondewo_logging_config_file
+    elif os.path.exists("/home/ondewo/logging.yaml") and not use_packaged:
+        config_path = "/home/ondewo/logging.yaml"
     else:
         parent: str = os.path.abspath(os.path.dirname(file_anchor.__file__))
         config_path = f"{parent}/config/logging.yaml"
 
+    conf: Dict[str, Any]
     with open(config_path) as fd:
         conf = yaml.safe_load(fd)
 
-    return conf  # type: ignore
+    return conf
 
 
 def set_module_name(
@@ -145,13 +150,15 @@ def set_module_name(
     :param conf:                the config of the logger
     :return:                    the config with module name
     """
-    conf["logging"]["formatters"]["fluent_debug"]["format"]["module_name"] = module_name
-    conf["logging"]["formatters"]["fluent_debug"]["format"]["git_repo_name"] = git_repo_name
-    conf["logging"]["formatters"]["fluent_debug"]["format"]["docker_image_name"] = docker_image_name
+    if "fluent_debug" in conf["logging"]["formatters"]:
+        conf["logging"]["formatters"]["fluent_debug"]["format"]["module_name"] = module_name
+        conf["logging"]["formatters"]["fluent_debug"]["format"]["git_repo_name"] = git_repo_name
+        conf["logging"]["formatters"]["fluent_debug"]["format"]["docker_image_name"] = docker_image_name
 
-    conf["logging"]["formatters"]["fluent_console"]["format"]["module_name"] = module_name
-    conf["logging"]["formatters"]["fluent_console"]["format"]["git_repo_name"] = git_repo_name
-    conf["logging"]["formatters"]["fluent_console"]["format"]["docker_image_name"] = docker_image_name
+    if "fluent_console" in conf["logging"]["formatters"]:
+        conf["logging"]["formatters"]["fluent_console"]["format"]["module_name"] = module_name
+        conf["logging"]["formatters"]["fluent_console"]["format"]["git_repo_name"] = git_repo_name
+        conf["logging"]["formatters"]["fluent_console"]["format"]["docker_image_name"] = docker_image_name
 
     return conf
 
@@ -198,17 +205,10 @@ def initiate_loggers(conf: Dict[str, Any]) -> Tuple[logging.Logger, ...]:
 
 
 def check_python_version(logger: logging.Logger) -> None:
-    """
-    Checks the python version. The python3 logger cant be imported to python 2.
-
-    :param:
-    :return:
-    """
+    """Checks the python version. The python3 logger cant be imported to python 2."""
     if sys.version_info[0] == 2:
         # this wont actually run because of syntax errors, but functions as a sort of documentation
-        logger.error(
-            "Looks like you imported the Python3 logger in a Python2 project. Did you mean to do that?"
-        )
+        logger.error("Looks like you imported the Python3 logger in a Python2 project. Did you mean to do that?")
 
 
 def create_logs(conf: Optional[Dict[str, Any]] = None) -> Tuple[logging.Logger, ...]:
