@@ -8,7 +8,7 @@
 
 ### Improvements
 
-* Added AsyncTimer and async logger #21
+* Added AsyncTimer and async logger
 
 *****************
 
