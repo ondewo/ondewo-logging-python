@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import asyncio
+import json
 import re
 from logging import Logger
 from multiprocessing.pool import ThreadPool
@@ -23,6 +25,7 @@ from time import sleep
 from typing import (
     Any,
     Callable,
+    Coroutine,
     Dict,
     List,
     Set,
@@ -31,10 +34,16 @@ from typing import (
 
 import pytest
 
+from ondewo.logging.async_logger import logger_console as log
 from ondewo.logging.constants import CONTEXT
 from ondewo.logging.decorators import (
+    AsyncTimer,
     ThreadContextLogger,
     Timer,
+    async_exception_handling,
+    async_log_args_kwargs_results,
+    async_log_arguments,
+    async_log_exception,
     exception_handling,
     exception_silencing,
     timing,
@@ -686,3 +695,284 @@ def test_logging(logger, log_store) -> None:
     logger.info('Info message')
     assert log_store.messages['debug'] == ['Debug message']
     assert log_store.messages['info'] == ['Info message']
+
+
+@pytest.mark.asyncio
+async def test_async_timer():
+    log_store = []
+
+    async def mock_logger(log: Dict[str, Any]) -> None:
+        log_store.append(log)
+
+    timer = AsyncTimer(logger=mock_logger)
+
+    @timer
+    async def async_function():
+        await asyncio.sleep(0.1)
+        return "Done"
+
+    result = await async_function()
+    assert result == "Done"
+    assert len(log_store) == 3  # Start log, arguments log, stop log
+    assert "Starting" in log_store[0]["message"]
+    assert "Function async_function executed" in log_store[1]["message"]
+    assert "Elapsed time" in log_store[2]["message"]
+
+
+@pytest.mark.asyncio
+async def test_async_exception_handling() -> None:
+    log_store: List[Dict[str, Any]] = []
+
+    async def mock_logger(log: Dict[str, Any]) -> None:
+        log_store.append(log)
+
+    @async_exception_handling
+    async def async_function_with_exception() -> None:
+        raise ValueError("Test exception")
+
+    result = await async_function_with_exception()  # type: ignore
+    assert result is not None
+    assert isinstance(result, dict)
+    assert len(log_store) == 0
+    assert "exception" in result["tags"]
+    assert "Test exception" in result["message"]
+
+
+@pytest.mark.asyncio
+async def test_async_exception_handling_with_logger() -> None:
+    log_store: List[Dict[str, Any]] = []
+
+    async def mock_logger(log: Dict[str, Any]) -> None:
+        log_store.append(log)
+
+    @async_exception_handling
+    async def async_function_with_exception_and_logger(
+        logger: Callable[[Dict[str, Any]], Coroutine[Any, Any, None]]
+    ) -> None:
+        try:
+            raise ValueError("Test exception with logger")
+        except Exception as e:
+            await logger({"tags": ["exception"], "message": str(e)})
+
+    await async_function_with_exception_and_logger(mock_logger)  # type: ignore
+    assert len(log_store) == 1  # Exception log recorded by mock_logger
+    assert "exception" in log_store[0]["tags"]
+    assert "Test exception with logger" in log_store[0]["message"]
+
+
+@pytest.mark.asyncio
+async def test_async_function_without_exception() -> None:
+    log_store: List[Dict[str, Any]] = []
+
+    async def mock_logger(log: Dict[str, Any]) -> None:
+        log_store.append(log)
+
+    @async_exception_handling  # type:ignore
+    async def async_function_without_exception() -> str:
+        return "Function completed successfully"
+
+    result = await async_function_without_exception()  # type:ignore
+    assert result == "Function completed successfully"
+    assert not log_store
+
+
+@pytest.mark.asyncio
+async def test_async_function_without_exception2() -> None:
+    log_store: List[Dict[str, Any]] = []
+
+    async def mock_logger(log: Dict[str, Any]) -> None:
+        log_store.append(log)
+
+    @async_exception_handling  # type:ignore
+    async def async_function_without_exception() -> str:
+        return "Function completed successfully"
+
+    result = await async_function_without_exception()  # type:ignore
+    assert result == "Function completed successfully"
+    assert len(log_store) == 0
+
+
+@pytest.mark.asyncio
+async def test_async_log_arguments() -> None:
+    log_store: List[Dict[str, Any]] = []
+
+    async def mock_logger(log: Dict[str, Any]) -> None:
+        log_store.append(log)
+
+    @async_log_arguments(mock_logger)
+    async def async_function_with_args(a: int, b: int) -> int:
+        return a + b
+
+    result = await async_function_with_args(3, 5)
+    assert result == 8
+    assert len(log_store) == 1
+    assert log_store[0]["log_type"] == "arguments"
+    assert "Function arguments" in log_store[0]["message"]
+    logged_data = json.loads(log_store[0]["message"].split(": ", 1)[1])
+    assert logged_data["function"] == "async_function_with_args"
+    assert logged_data["args"] == {"a": "3", "b": "5"}
+    assert logged_data["kwargs"] == {}
+
+
+@pytest.mark.asyncio
+async def test_async_log_arguments_with_kwargs() -> None:
+    log_store: List[Dict[str, Any]] = []
+
+    async def mock_logger(log: Dict[str, Any]) -> None:
+        log_store.append(log)
+
+    @async_log_arguments(mock_logger)
+    async def async_function_with_args_kwargs(x: int, y: str = "default") -> str:
+        return f"{x}: {y}"
+
+    result = await async_function_with_args_kwargs(10, y="custom")
+    assert result == "10: custom"
+    assert len(log_store) == 1
+    assert log_store[0]["log_type"] == "arguments"
+    logged_data = json.loads(log_store[0]["message"].split(": ", 1)[1])
+    assert logged_data["args"] == {"x": "10", "y": "custom"}
+    assert logged_data["kwargs"] == {"y": "custom"}
+
+
+@pytest.mark.asyncio
+async def test_async_log_arguments_no_args() -> None:
+    log_store: List[Dict[str, Any]] = []
+
+    async def mock_logger(log: Dict[str, Any]) -> None:
+        log_store.append(log)
+
+    @async_log_arguments(mock_logger)
+    async def async_function_without_args() -> str:
+        return "No arguments here"
+
+    result = await async_function_without_args()
+    assert result == "No arguments here"
+    assert len(log_store) == 1
+    assert log_store[0]["log_type"] == "arguments"
+    logged_data = json.loads(log_store[0]["message"].split(": ", 1)[1])
+    assert logged_data["args"] == {}
+    assert logged_data["kwargs"] == {}
+
+
+@pytest.mark.asyncio
+async def test_async_log_exception_decorator() -> None:
+    log_store: List[Dict[str, Any]] = []
+
+    async def mock_logger(log: Dict[str, Any]) -> None:
+        log_store.append(log)
+
+    @async_log_exception(mock_logger)
+    async def failing_function():
+        raise ValueError("Decorated test exception")
+
+    with pytest.raises(ValueError, match="Decorated test exception"):
+        await failing_function()
+
+    assert len(log_store) == 1
+    assert "exception" in log_store[0]["tags"]
+    assert "Decorated test exception" in log_store[0]["message"]
+    assert "traceback" in log_store[0]
+    assert "ValueError" == log_store[0]["exception_type"]
+    assert "failing_function" == log_store[0]["function"]
+    assert "log_type" in log_store[0] and log_store[0]["log_type"] == "exception"
+
+
+@pytest.mark.asyncio
+async def test_async_log_exception_decorator_no_exception() -> None:
+    log_store: List[Dict[str, Any]] = []
+
+    async def mock_logger(log: Dict[str, Any]) -> None:
+        log_store.append(log)
+
+    @async_log_exception(mock_logger)
+    async def successful_function():
+        return "Success!"
+
+    result = await successful_function()
+    assert result == "Success!"
+    assert len(log_store) == 0  # No exception, so no log
+
+
+@pytest.mark.asyncio
+async def test_async_log_args_kwargs_results() -> None:
+    log_store = []
+
+    async def mock_logger(log: Dict[str, Any]) -> None:
+        log_store.append(log)
+
+    @async_log_args_kwargs_results(logger=mock_logger)
+    async def async_function(a: int, b: int) -> int:
+        return a + b
+
+    result = await async_function(3, 5)
+    assert result == 8
+    assert len(log_store) == 2  # Log entry for call and return
+    assert log_store[0]["log_type"] == "call"
+    assert log_store[0]["function"] == "async_function"
+    assert log_store[0]["args"] == {"a": "3", "b": "5"}
+    assert log_store[0]["kwargs"] == {}
+
+    assert log_store[1]["log_type"] == "return"
+    assert log_store[1]["function"] == "async_function"
+    assert log_store[1]["result"] == "8"
+
+
+@pytest.mark.asyncio
+async def test_async_log_args_kwargs_results_with_kwargs2() -> None:
+    log_store = []
+
+    async def mock_logger(log: Dict[str, Any]) -> None:
+        log_store.append(log)
+
+    @async_log_args_kwargs_results(logger=mock_logger, argument_max_length=5)
+    async def async_function_with_kwargs(x: int, name: str = "default_name") -> str:
+        return f"{name}: {x}"
+
+    result = await async_function_with_kwargs(10, name="test_long_name")
+    assert result == "test_long_name: 10"
+    assert len(log_store) == 2
+    assert log_store[0]["log_type"] == "call"
+    assert log_store[0]["args"] == {"x": "10", "name": repr("test_long_name")[:5]}
+    assert log_store[0]["kwargs"] == {"name": repr("test_long_name")[:5]}
+    assert log_store[1]["log_type"] == "return"
+    assert log_store[1]["result"] == repr("test_long_name: 10")[:5]
+
+
+@pytest.mark.asyncio
+async def test_async_log_args_kwargs_results_exception() -> None:
+    log_store = []
+
+    async def mock_logger(log: Dict[str, Any]) -> None:
+        log_store.append(log)
+
+    @async_log_args_kwargs_results(logger=mock_logger)
+    async def failing_async_function(val: int):
+        if val < 0:
+            raise ValueError("Value cannot be negative")
+        return val * 2
+
+    with pytest.raises(ValueError, match="Value cannot be negative"):
+        await failing_async_function(-5)
+
+    assert len(log_store) == 2  # Log for call and exception
+    assert log_store[0]["log_type"] == "call"
+    assert log_store[0]["function"] == "failing_async_function"
+    assert log_store[0]["args"] == {"val": "-5"}
+    assert log_store[1]["log_type"] == "exception"
+    assert log_store[1]["function"] == "failing_async_function"
+    assert log_store[1]["exception_type"] == "ValueError"
+    assert log_store[1]["exception"] == "Value cannot be negative"
+
+
+@pytest.mark.asyncio
+async def test_async_log_simple() -> None:
+    """Tests the AsyncTimer decorator with a simple asynchronous function."""
+
+    @AsyncTimer(logger=log.debug, log_arguments=True, message="Test Elapsed: {:0.5f}")
+    async def my_test_function(val: int) -> int:
+        await asyncio.sleep(0.01)  # Simulate some work
+        print(f"Test value: {val}")
+        return val * 2
+
+    result = await my_test_function(5)
+    assert result == 10

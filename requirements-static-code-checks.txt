@@ -9,3 +9,4 @@ types-mock
 types-setuptools
 types-toml
 types-PyYAML
+types-aiofiles
